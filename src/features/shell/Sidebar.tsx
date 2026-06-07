@@ -2,15 +2,16 @@ import ArchiveOutlined from '@mui/icons-material/ArchiveOutlined';
 import BarChartOutlined from '@mui/icons-material/BarChartOutlined';
 import CalendarMonthOutlined from '@mui/icons-material/CalendarMonthOutlined';
 import CheckBoxOutlined from '@mui/icons-material/CheckBoxOutlined';
-import ExpandMore from '@mui/icons-material/ExpandMore';
 import FlagOutlined from '@mui/icons-material/FlagOutlined';
 import LabelOutlined from '@mui/icons-material/LabelOutlined';
+import LogoutOutlined from '@mui/icons-material/LogoutOutlined';
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined';
 import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
 import {
   Avatar,
   Box,
   Divider,
+  IconButton,
   List,
   ListItemButton,
   ListItemIcon,
@@ -19,6 +20,7 @@ import {
 } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 import { themeTokens } from '../../app/theme/theme';
+import { useAuth } from '../auth/useAuth';
 
 type SidebarProps = {
   width: number;
@@ -38,6 +40,12 @@ const secondaryNavigation = [
 ];
 
 export function Sidebar({ width }: SidebarProps) {
+  const { profile, signOut, user } = useAuth();
+  const profileEmail = profile?.email ?? user?.email ?? '';
+  const profileName =
+    profile?.display_name?.trim() || profileEmail.split('@')[0] || 'Пользователь';
+  const avatarInitial = profileName.trim().charAt(0).toUpperCase() || 'П';
+
   return (
     <Box
       component="nav"
@@ -189,17 +197,19 @@ export function Sidebar({ width }: SidebarProps) {
             background: 'linear-gradient(135deg, #6d35d1, #8b5cf6)',
           }}
         >
-          А
+          {avatarInitial}
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography noWrap sx={{ fontWeight: 700 }}>
-            Алексей
+            {profileName}
           </Typography>
           <Typography color="text.secondary" variant="body2" noWrap>
-            alexey@mail.ru
+            {profileEmail}
           </Typography>
         </Box>
-        <ExpandMore sx={{ color: 'text.secondary' }} />
+        <IconButton aria-label="Выйти" color="inherit" onClick={() => void signOut()}>
+          <LogoutOutlined fontSize="small" />
+        </IconButton>
       </Box>
     </Box>
   );

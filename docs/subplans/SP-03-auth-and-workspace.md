@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` to implement this plan task-by-task. Steps should use checkbox syntax for tracking during execution.
 
-**Status:** Draft
+**Status:** Implemented (local env and Playwright run deferred)
 **Master references:** `MP-03`, `MP-04`, `MP-06`, `MP-07`, `MP-09`, `MP-11`, `MP-12`, `MP-13`, `MP-14`, `MP-15`
 **Depends on:** `SP-01-foundation.md`, `SP-02-supabase-schema.md`
 **Goal:** Add real Supabase email/password authentication, protected app routes, logout, profile creation, and one-workspace bootstrap while preserving the existing dark Russian UI shell.
@@ -81,15 +81,15 @@
 
 ### Task 1: Add Supabase Client And Env Contract
 
-- [ ] Run `npm install @supabase/supabase-js` and let npm choose the compatible current version.
-- [ ] Create `.env.example`:
+- [x] Run `npm install @supabase/supabase-js` and let npm choose the compatible current version.
+- [x] Create `.env.example`:
 
 ```text
 VITE_SUPABASE_URL=http://127.0.0.1:54321
 VITE_SUPABASE_PUBLISHABLE_KEY=replace-with-local-publishable-key
 ```
 
-- [ ] Create `src/lib/supabase/client.ts` with a typed Supabase client:
+- [x] Create `src/lib/supabase/client.ts` with a typed Supabase client:
 
 ```ts
 import { createClient } from '@supabase/supabase-js';
@@ -105,108 +105,108 @@ if (!supabaseUrl || !supabasePublishableKey) {
 export const supabase = createClient<Database>(supabaseUrl, supabasePublishableKey);
 ```
 
-- [ ] Run `npm run build` and confirm missing env handling is acceptable for a configured local run.
+- [x] Run `npm run build` and confirm missing env handling is acceptable for a configured local run.
 
 ### Task 2: Add Workspace Bootstrap Helper
 
-- [ ] Create `src/lib/supabase/authBootstrap.ts`.
-- [ ] Define `AuthWorkspaceState` with `profile`, `workspace`, and `role`.
-- [ ] Implement `ensureAuthWorkspace(supabaseClient, user)`:
+- [x] Create `src/lib/supabase/authBootstrap.ts`.
+- [x] Define `AuthWorkspaceState` with `profile`, `workspace`, and `role`.
+- [x] Implement `ensureAuthWorkspace(supabaseClient, user)`:
   - read or create `profiles` with `id = user.id` and `email = user.email`;
   - read current membership joined to `workspaces`;
   - if membership exists, return the first workspace and role;
   - if no membership exists, create a workspace named `Команда <email-prefix>` and insert initial owner membership;
   - return the created workspace, profile, and role.
-- [ ] Create `src/lib/supabase/authBootstrap.test.ts`.
-- [ ] Add tests:
+- [x] Create `src/lib/supabase/authBootstrap.test.ts`.
+- [x] Add tests:
   - existing member returns existing profile/workspace without creating a new workspace;
   - new authenticated user creates profile, workspace, and owner membership;
   - database error is returned as a thrown user-visible bootstrap error.
-- [ ] Run `npm run test -- src/lib/supabase/authBootstrap.test.ts`.
+- [x] Run `npm run test -- src/lib/supabase/authBootstrap.test.ts`.
 
 ### Task 3: Add Auth Provider
 
-- [ ] Create `src/features/auth/authTypes.ts`.
-- [ ] Create `src/features/auth/AuthProvider.tsx`.
-- [ ] Use the Supabase Auth APIs verified from official docs:
+- [x] Create `src/features/auth/authTypes.ts`.
+- [x] Create `src/features/auth/AuthProvider.tsx`.
+- [x] Use the Supabase Auth APIs verified from official docs:
   - get the current session on mount;
   - subscribe with `onAuthStateChange`;
   - call `signInWithPassword` for sign in;
   - call `signUp` for sign up;
   - call `signOut` for logout.
-- [ ] Bootstrap profile/workspace after a non-null session.
-- [ ] Expose loading, authenticated, unauthenticated, and error states.
-- [ ] Create `src/features/auth/useAuth.ts` and throw a clear error when used outside the provider.
-- [ ] Wire `AuthProvider` in `src/app/providers/AppProviders.tsx`.
-- [ ] Add provider tests for initial loading, signed-out state, and signed-in bootstrap state.
-- [ ] Run the auth provider tests.
+- [x] Bootstrap profile/workspace after a non-null session.
+- [x] Expose loading, authenticated, unauthenticated, and error states.
+- [x] Create `src/features/auth/useAuth.ts` and throw a clear error when used outside the provider.
+- [x] Wire `AuthProvider` in `src/app/providers/AppProviders.tsx`.
+- [x] Add provider tests for initial loading, signed-out state, and signed-in bootstrap state.
+- [x] Run the auth provider tests.
 
 ### Task 4: Protect Routes
 
-- [ ] Create `src/features/auth/ProtectedRoute.tsx`.
-- [ ] Implement an app guard:
+- [x] Create `src/features/auth/ProtectedRoute.tsx`.
+- [x] Implement an app guard:
   - while auth status is loading, show a compact dark loading state;
   - when unauthenticated, redirect to `/login`;
   - when authenticated, render the app shell.
-- [ ] Implement a login guard:
+- [x] Implement a login guard:
   - when authenticated, redirect to `/app/projects`;
   - when unauthenticated, render `LoginPage`.
-- [ ] Update `src/app/router/AppRouter.tsx` so `/`, unknown routes, and `/app/*` respect auth state.
-- [ ] Update `src/app/router/AppRouter.test.tsx` to cover:
+- [x] Update `src/app/router/AppRouter.tsx` so `/`, unknown routes, and `/app/*` respect auth state.
+- [x] Update `src/app/router/AppRouter.test.tsx` to cover:
   - unauthenticated `/app/projects` redirects to `/login`;
   - authenticated `/login` redirects to `/app/projects`;
   - authenticated sidebar navigation still works.
-- [ ] Run `npm run test -- src/app/router/AppRouter.test.tsx`.
+- [x] Run `npm run test -- src/app/router/AppRouter.test.tsx`.
 
 ### Task 5: Replace Login Placeholder With Real Form
 
-- [ ] Update `src/features/auth/LoginPage.tsx` to use controlled form state.
-- [ ] Add sign-in/sign-up mode switching without leaving `/login`.
-- [ ] Validate email and password with Zod:
+- [x] Update `src/features/auth/LoginPage.tsx` to use controlled form state.
+- [x] Add sign-in/sign-up mode switching without leaving `/login`.
+- [x] Validate email and password with Zod:
   - email must be a valid email;
   - password must be present for sign in;
   - password must meet the minimum displayed by the form for sign up.
-- [ ] On submit, call `signIn` or `signUp` from `useAuth`.
-- [ ] Show Russian loading and error messages without leaking whether an account exists.
-- [ ] Keep the compact dark visual style from SP-01.
-- [ ] Create `src/features/auth/LoginPage.test.tsx` and cover:
+- [x] On submit, call `signIn` or `signUp` from `useAuth`.
+- [x] Show Russian loading and error messages without leaking whether an account exists.
+- [x] Keep the compact dark visual style from SP-01.
+- [x] Create `src/features/auth/LoginPage.test.tsx` and cover:
   - sign-in form renders by default;
   - switch to sign-up mode changes button/copy;
   - invalid email shows validation feedback;
   - valid submit calls the expected auth action.
-- [ ] Run `npm run test -- src/features/auth/LoginPage.test.tsx`.
+- [x] Run `npm run test -- src/features/auth/LoginPage.test.tsx`.
 
 ### Task 6: Add Logout And Authenticated Sidebar Profile
 
-- [ ] Update `src/features/shell/Sidebar.tsx` to read `profile` and `signOut` from `useAuth`.
-- [ ] Replace static `Алексей` and `alexey@mail.ru` with authenticated profile data.
-- [ ] Add a compact logout icon button in the profile area with accessible label `Выйти`.
-- [ ] Keep the sidebar responsive behavior unchanged.
-- [ ] Add or update tests so clicking logout calls `signOut`.
-- [ ] Run the relevant shell/auth tests.
+- [x] Update `src/features/shell/Sidebar.tsx` to read `profile` and `signOut` from `useAuth`.
+- [x] Replace static `Алексей` and `alexey@mail.ru` with authenticated profile data.
+- [x] Add a compact logout icon button in the profile area with accessible label `Выйти`.
+- [x] Keep the sidebar responsive behavior unchanged.
+- [x] Add or update tests so clicking logout calls `signOut`.
+- [x] Run the relevant shell/auth tests.
 
 ### Task 7: Add Auth E2E Smoke Coverage
 
-- [ ] Ensure local `.env` is configured manually with local Supabase URL and browser-safe key; do not commit `.env`.
-- [ ] Ensure `npx supabase db reset` has loaded seeded users.
-- [ ] Update `tests/smoke.spec.ts`:
+- [ ] Ensure local `.env` is configured manually with local Supabase URL and browser-safe key; do not commit `.env`. Deferred: local `.env` is developer-specific and remains ignored; configure it before browser/e2e QA.
+- [x] Ensure `npx supabase db reset` has loaded seeded users.
+- [x] Update `tests/smoke.spec.ts`:
   - open `/login`;
   - sign in as `owner@example.com` with `password123`;
   - confirm `/app/projects` renders;
   - click logout;
   - confirm `/login` renders again.
-- [ ] Keep the existing project and detail smoke tests.
-- [ ] Run `npm run test:e2e` when browser verification is explicitly requested.
+- [x] Keep the existing project and detail smoke tests.
+- [ ] Run `npm run test:e2e` when browser verification is explicitly requested. Deferred: not explicitly requested for this implementation run.
 
 ### Task 8: Final Verification
 
-- [ ] Run `npx supabase db reset`.
-- [ ] Run `npx supabase test db`.
-- [ ] Run `npm run build`.
-- [ ] Run `npm run test`.
-- [ ] Run `npm run test:e2e` if explicitly requested for this implementation run.
-- [ ] Run `rg "service_role|SUPABASE_SERVICE_ROLE|sb_secret|eyJ" supabase src .env.example` and confirm no committed secret appears.
-- [ ] Run `git status --short` and confirm only SP-03-owned files changed.
+- [x] Run `npx supabase db reset`.
+- [x] Run `npx supabase test db`.
+- [x] Run `npm run build`.
+- [x] Run `npm run test`.
+- [ ] Run `npm run test:e2e` if explicitly requested for this implementation run. Deferred: not explicitly requested for this implementation run.
+- [x] Run `rg "service_role|SUPABASE_SERVICE_ROLE|sb_secret|eyJ" supabase src .env.example` and confirm no committed secret appears.
+- [x] Run `git status --short` and confirm only SP-03-owned files changed.
 
 ## Acceptance Criteria
 

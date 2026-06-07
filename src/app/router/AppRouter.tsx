@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { GuestRoute, ProtectedRoute } from '../../features/auth/ProtectedRoute';
 import { LoginPage } from '../../features/auth/LoginPage';
 import { CalendarPage } from '../../features/calendar/CalendarPage';
 import { ProjectDetailPage } from '../../features/projects/ProjectDetailPage';
@@ -10,8 +11,22 @@ import { StatsPage } from '../../features/stats/StatsPage';
 export function AppRouter() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/app" element={<AppShell />}>
+      <Route
+        path="/login"
+        element={
+          <GuestRoute>
+            <LoginPage />
+          </GuestRoute>
+        }
+      />
+      <Route
+        path="/app"
+        element={
+          <ProtectedRoute>
+            <AppShell />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<Navigate to="/app/projects" replace />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="projects/:projectId" element={<ProjectDetailPage />} />
