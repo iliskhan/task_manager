@@ -135,6 +135,8 @@ for each row execute function public.set_updated_at();
 create or replace function public.ensure_task_project_workspace_match()
 returns trigger
 language plpgsql
+security definer
+set search_path = public
 as $$
 declare
   parent_workspace_id uuid;
@@ -163,6 +165,8 @@ for each row execute function public.ensure_task_project_workspace_match();
 create or replace function public.ensure_task_label_workspace_match()
 returns trigger
 language plpgsql
+security definer
+set search_path = public
 as $$
 declare
   task_workspace_id uuid;
@@ -485,4 +489,3 @@ with check (
   public.is_workspace_member(workspace_id)
   and actor_id = (select auth.uid())
 );
-

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` to implement this plan task-by-task. Steps should use checkbox syntax for tracking during execution.
 
-**Status:** Implemented; browser and Playwright verification deferred by project instruction
+**Status:** Implemented and verified
 **Master references:** `MP-04`, `MP-05`, `MP-06`, `MP-07`, `MP-12`, `MP-13`, `MP-14`  
 **Depends on:** None  
 **Goal:** Create the runnable React + TypeScript + Vite foundation for the Russian-language task manager, including the dark MUI design system, app shell, routing, and placeholder screens.  
@@ -184,15 +184,15 @@
 - [x] Create `tests/smoke.spec.ts`.
 - [x] Add a smoke test that opens `/app/projects`, confirms `Мои задачи` is visible, and confirms sidebar navigation is visible.
 - [x] Add a smoke test that opens `/app/projects/demo`, confirms `Бизнес` is visible, and confirms task tabs are visible.
-- [ ] Run `npm run test:e2e` if Playwright browsers are installed.
-- [ ] If browsers are not installed, record the blocker and keep `npm run build` and `npm run test` as required verification for SP-01.
+- [x] Run `npm run test:e2e` if Playwright browsers are installed.
+- [x] If browsers are not installed, record the blocker and keep `npm run build` and `npm run test` as required verification for SP-01.
 
 ### Task 7: Visual QA And Documentation Check
 
-- [ ] Start the dev server with `npm run dev`.
-- [ ] Open `/app/projects` and compare against `docs/assets/reference-design/screenshot-02-project-list-overview.png`.
-- [ ] Open `/app/projects/demo` and compare against `docs/assets/reference-design/screenshot-01-project-detail-task-list.png`.
-- [ ] Check a mobile-width viewport and confirm sidebar/content controls do not overlap.
+- [x] Start the dev server with `npm run dev`.
+- [x] Open `/app/projects` and compare against `docs/assets/reference-design/screenshot-02-project-list-overview.png`.
+- [x] Open `/app/projects/demo` and compare against `docs/assets/reference-design/screenshot-01-project-detail-task-list.png`.
+- [x] Check a mobile-width viewport and confirm sidebar/content controls do not overlap.
 - [x] Run `rg "screenshot-.*\\.jpg" docs/master-plan.md docs/assets/reference-design/README.md` and confirm no stale `.jpg` references remain in the source-of-truth screenshot docs.
 - [x] Run `rg "SP-01|MP-05|MP-06|MP-07|MP-13|MP-14" docs/subplans/SP-01-foundation.md` and confirm the required cross-references are present.
 
@@ -230,3 +230,6 @@
 - `npm run build` passed with Vite's chunk-size warning only.
 - `npm run test` passed: 1 test file, 3 tests.
 - Playwright, dev-server browser QA, and in-app-browser checks were not run because `AGENTS.md` now requires an explicit user request for browser verification.
+- Browser checks were later explicitly requested and completed on 2026-06-07:
+  - `npm run test:e2e` passed: 2 Chromium smoke tests.
+  - In-app browser QA passed for `/app/projects`, `/app/projects/demo`, and mobile `/app/projects` at `390x844`; console warn/error logs were empty and no horizontal overflow was detected.

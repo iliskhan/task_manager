@@ -1,28 +1,28 @@
 begin;
 
-select no_plan();
+select plan(39);
 
-select has_table('public', 'profiles');
-select has_table('public', 'workspaces');
-select has_table('public', 'workspace_members');
-select has_table('public', 'projects');
-select has_table('public', 'tasks');
-select has_table('public', 'labels');
-select has_table('public', 'task_labels');
-select has_table('public', 'project_visits');
-select has_table('public', 'activity_events');
+select has_table('profiles');
+select has_table('workspaces');
+select has_table('workspace_members');
+select has_table('projects');
+select has_table('tasks');
+select has_table('labels');
+select has_table('task_labels');
+select has_table('project_visits');
+select has_table('activity_events');
 
-select has_column('public', 'profiles', 'id');
-select has_column('public', 'profiles', 'email');
-select has_column('public', 'workspaces', 'created_by');
-select has_column('public', 'workspace_members', 'role');
-select has_column('public', 'projects', 'workspace_id');
-select has_column('public', 'tasks', 'status');
-select has_column('public', 'tasks', 'priority');
-select has_column('public', 'tasks', 'position');
-select has_column('public', 'task_labels', 'task_id');
-select has_column('public', 'task_labels', 'label_id');
-select has_column('public', 'activity_events', 'payload');
+select has_column('profiles', 'id');
+select has_column('profiles', 'email');
+select has_column('workspaces', 'created_by');
+select has_column('workspace_members', 'role');
+select has_column('projects', 'workspace_id');
+select has_column('tasks', 'status');
+select has_column('tasks', 'priority');
+select has_column('tasks', 'position');
+select has_column('task_labels', 'task_id');
+select has_column('task_labels', 'label_id');
+select has_column('activity_events', 'payload');
 
 select ok(
   exists (
@@ -190,4 +190,3 @@ select ok(
 select * from finish();
 
 rollback;
-

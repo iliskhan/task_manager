@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` to implement this plan task-by-task. Steps should use checkbox syntax for tracking during execution.
 
-**Status:** Partially implemented; local Supabase verification and generated types blocked
+**Status:** Implemented and verified
 **Master references:** `MP-02`, `MP-03`, `MP-06`, `MP-07`, `MP-08`, `MP-09`, `MP-10`, `MP-12`, `MP-13`, `MP-14`, `MP-15`
 **Depends on:** `SP-01-foundation.md`
 **Goal:** Create the Supabase local backend foundation for the task manager, including schema migrations, Row Level Security, local seed data, database tests, and generated TypeScript database types.
@@ -171,13 +171,13 @@ These functions must be `security definer`, set `search_path = public`, and only
 ### Task 1: Initialize Supabase Local Structure
 
 - [x] Run `npx supabase --version` and record the version in the implementation notes.
-- [ ] Run `npx supabase init` if `supabase/config.toml` does not already exist.
+- [x] Run `npx supabase init` if `supabase/config.toml` does not already exist.
 - [x] Confirm the following files or folders exist:
   - `supabase/config.toml`
   - `supabase/migrations/`
   - `supabase/tests/database/`
 - [x] Do not link a remote Supabase project in this subplan.
-- [ ] Run `git status --short` and confirm only expected Supabase scaffold files changed.
+- [x] Run `git status --short` and confirm only expected Supabase scaffold files changed.
 
 ### Task 2: Add Initial Schema Migration
 
@@ -209,8 +209,8 @@ create extension if not exists "pgcrypto";
   - `task_labels (label_id)`
   - `project_visits (user_id, visited_at desc)`
   - `activity_events (workspace_id, created_at desc)`
-- [ ] Run `npx supabase db reset`.
-- [ ] If Docker or Supabase local stack is unavailable, record the blocker and run SQL syntax checks with the best available local Postgres-compatible tool before continuing.
+- [x] Run `npx supabase db reset`.
+- [x] If Docker or Supabase local stack is unavailable, record the blocker and run SQL syntax checks with the best available local Postgres-compatible tool before continuing.
 
 ### Task 3: Add RLS Helper Functions And Policies
 
@@ -234,7 +234,7 @@ alter table public.activity_events enable row level security;
   - `profiles_select_same_workspace`
   - `workspace_members_insert_owner_or_initial_self`
   - `tasks_update_workspace_members`
-- [ ] Run `npx supabase db reset`.
+- [x] Run `npx supabase db reset`.
 - [x] Manually inspect the generated migration and confirm no service role key, anon key, or project secret appears in committed files.
 
 ### Task 4: Add Local Seed Data
@@ -263,7 +263,7 @@ alter table public.activity_events enable row level security;
   - `review`
   - `done`
 - [x] Seed at least one `project_visits` row per seeded user and at least three `activity_events`.
-- [ ] Run `npx supabase db reset` and confirm seed rows load without violating RLS, constraints, or triggers.
+- [x] Run `npx supabase db reset` and confirm seed rows load without violating RLS, constraints, or triggers.
 
 ### Task 5: Add Schema Integrity Tests
 
@@ -272,17 +272,17 @@ alter table public.activity_events enable row level security;
 
 ```sql
 begin;
-select plan(9);
+select plan(39);
 
-select has_table('public', 'profiles');
-select has_table('public', 'workspaces');
-select has_table('public', 'workspace_members');
-select has_table('public', 'projects');
-select has_table('public', 'tasks');
-select has_table('public', 'labels');
-select has_table('public', 'task_labels');
-select has_table('public', 'project_visits');
-select has_table('public', 'activity_events');
+select has_table('profiles');
+select has_table('workspaces');
+select has_table('workspace_members');
+select has_table('projects');
+select has_table('tasks');
+select has_table('labels');
+select has_table('task_labels');
+select has_table('project_visits');
+select has_table('activity_events');
 
 select * from finish();
 rollback;
@@ -294,7 +294,7 @@ rollback;
   - `tasks`
   - `task_labels`
 - [x] Add assertions that RLS is enabled on all nine browser-accessible tables.
-- [ ] Run `npx supabase test db supabase/tests/database/schema_integrity.test.sql`.
+- [x] Run `npx supabase test db supabase/tests/database/schema_integrity.test.sql`.
 
 ### Task 6: Add RLS Membership Tests
 
@@ -314,29 +314,29 @@ select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001
 - [x] Test that a non-member cannot read the seeded workspace or projects.
 - [x] Test that a workspace member can insert a task in their workspace.
 - [x] Test that a non-member cannot insert a task into the seeded workspace.
-- [ ] Run `npx supabase test db supabase/tests/database/rls_membership.test.sql`.
+- [x] Run `npx supabase test db supabase/tests/database/rls_membership.test.sql`.
 
 ### Task 7: Generate Database Types
 
-- [ ] Create `src/lib/supabase/` if it does not exist.
-- [ ] Run:
+- [x] Create `src/lib/supabase/` if it does not exist.
+- [x] Run:
 
 ```bash
 npx supabase gen types typescript --local > src/lib/supabase/database.types.ts
 ```
 
-- [ ] Confirm `src/lib/supabase/database.types.ts` includes the `public.Tables.tasks` and `public.Tables.workspace_members` definitions.
-- [ ] Run `npm run build` and confirm TypeScript accepts the generated type file.
+- [x] Confirm `src/lib/supabase/database.types.ts` includes the `public.Tables.tasks` and `public.Tables.workspace_members` definitions.
+- [x] Run `npm run build` and confirm TypeScript accepts the generated type file.
 
 ### Task 8: Final Verification And Documentation Check
 
-- [ ] Run `npx supabase db reset`.
-- [ ] Run `npx supabase test db`.
+- [x] Run `npx supabase db reset`.
+- [x] Run `npx supabase test db`.
 - [x] Run `npm run build`.
 - [x] Run `npm run test`.
 - [x] Run `rg "service_role|SUPABASE_SERVICE_ROLE|sb_secret|eyJ" supabase src` and confirm no secrets are committed.
 - [x] Run `rg "MP-08|MP-09|MP-12|SP-02" docs/subplans/SP-02-supabase-schema.md` and confirm required cross-references remain.
-- [ ] Run `git status --short` and confirm only SP-02-owned files changed.
+- [x] Run `git status --short` and confirm only SP-02-owned files changed.
 
 ## Acceptance Criteria
 
@@ -381,3 +381,8 @@ npx supabase gen types typescript --local > src/lib/supabase/database.types.ts
 - Fresh `npx supabase test db` failed on 2026-06-07 because no local Postgres was listening at `127.0.0.1:54322`.
 - Fresh `npx supabase gen types typescript --local` failed on 2026-06-07 because `supabase start is not running`.
 - `rg --hidden "service_role|SUPABASE_SERVICE_ROLE|sb_secret|eyJ" supabase src` returned no matches on 2026-06-07.
+- After Docker/Supabase was restarted, `npx supabase db reset` passed on 2026-06-07 when the local stack was started with `npx supabase start --exclude vector`; the excluded vector service is an ancillary logging container and is not required for this schema/RLS subplan.
+- `npx supabase test db` passed on 2026-06-07: 2 files, 48 tests.
+- `npx supabase gen types typescript --local > src/lib/supabase/database.types.ts` passed on 2026-06-07, and the generated file includes `tasks` and `workspace_members`.
+- `npm run build`, `npm run test`, and `npm run test:e2e` passed after generated types were added.
+- `rg "service_role|SUPABASE_SERVICE_ROLE|sb_secret|eyJ" supabase src` returned no matches on 2026-06-07.
