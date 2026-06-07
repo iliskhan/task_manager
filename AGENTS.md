@@ -21,6 +21,10 @@ This repository is a new React + Supabase Task Manager project. Before making pr
 - Each subplan must reference relevant `MP-XX` sections from `docs/master-plan.md`.
 - Keep subplans independently implementable and verifiable.
 
+## Branching And Execution
+
+- The user has explicitly approved performing repository actions directly on `master`; do not require a separate feature branch or worktree unless the user asks for one or a concrete safety issue requires isolation.
+
 ## Product Direction
 
 - The app is a Russian-language team task manager.
@@ -40,6 +44,15 @@ This repository is a new React + Supabase Task Manager project. Before making pr
 - Zod for validation.
 - Vitest and Playwright for verification.
 
+## Documentation And Version Discipline
+
+- Do not write exact versions, limits, API signatures, CLI flags, compatibility claims, or other precise third-party facts from memory when they matter to implementation.
+- For package versions in `package.json`, use package-manager or registry commands such as `npm view`, `npm outdated`, `npm ls`, `npm install <package>@latest`, or `npx npm-check-updates`; do not manually invent or hand-edit version numbers unless the user explicitly asks for a pinned value.
+- When choosing or changing libraries, frameworks, CLIs, migrations, config syntax, or external APIs, verify the decision against current official documentation or primary sources before implementing.
+- Prefer official documentation and package registries over blog posts or memory. If documentation and local tooling disagree, report the discrepancy and choose the safer compatible option.
+- Prefer proven libraries and maintained framework features for standard problems such as auth integration, validation, drag-and-drop, routing, forms, dates, tables, charts, testing, and database access. Do not reimplement common solved problems unless the master plan, a subplan, or a concrete technical constraint justifies custom code.
+- If custom code is chosen instead of an established library, document the reason in the relevant subplan or implementation notes.
+
 ## Supabase And Security
 
 - Treat Supabase RLS as the primary data-security boundary.
@@ -47,6 +60,12 @@ This repository is a new React + Supabase Task Manager project. Before making pr
 - Never expose service role keys in browser code.
 - Use Edge Functions for privileged or sensitive operations, especially workspace member addition by email.
 - Keep the MVP no-realtime by default unless a later subplan explicitly adds realtime.
+
+## Browser And Playwright Verification
+
+- Do not run Playwright checks, `npm run test:e2e`, or in-app-browser verification automatically.
+- Run Playwright, browser, visual QA, and in-app-browser checks only when the user explicitly requests them in the current task.
+- If a subplan lists Playwright or browser verification but the user has not requested it, record it as deferred rather than running it automatically.
 
 ## OpenAI Documentation Rule
 
@@ -58,4 +77,3 @@ When working with OpenAI API, Codex, Agents SDK, tools, or Responses API, always
 - Keep the app runnable after each subplan.
 - Add tests proportionally to risk: RLS, auth, Kanban ordering, task mutations, and Edge Functions need focused verification.
 - Do not build out-of-scope features such as comments, notifications, attachments, custom statuses, sprints, billing, or multi-workspace switching unless a new subplan explicitly adds them.
-

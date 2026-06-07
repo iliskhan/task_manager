@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` to implement this plan task-by-task. Steps should use checkbox syntax for tracking during execution.
 
-**Status:** Draft  
+**Status:** Implemented; browser and Playwright verification deferred by project instruction
 **Master references:** `MP-04`, `MP-05`, `MP-06`, `MP-07`, `MP-12`, `MP-13`, `MP-14`  
 **Depends on:** None  
 **Goal:** Create the runnable React + TypeScript + Vite foundation for the Russian-language task manager, including the dark MUI design system, app shell, routing, and placeholder screens.  
@@ -80,14 +80,14 @@
 
 ### Task 1: Scaffold Tooling And Project Entry
 
-- [ ] Create `package.json` with scripts:
+- [x] Create `package.json` with scripts:
   - `dev`: `vite`
   - `build`: `tsc -b && vite build`
   - `preview`: `vite preview`
   - `test`: `vitest run`
   - `test:watch`: `vitest`
   - `test:e2e`: `playwright test`
-- [ ] Add runtime dependencies:
+- [x] Add runtime dependencies:
   - `@emotion/react`
   - `@emotion/styled`
   - `@mui/icons-material`
@@ -98,7 +98,7 @@
   - `react-dom`
   - `react-router-dom`
   - `zod`
-- [ ] Add dev dependencies:
+- [x] Add dev dependencies:
   - `@playwright/test`
   - `@testing-library/jest-dom`
   - `@testing-library/react`
@@ -107,55 +107,55 @@
   - `vite`
   - `vitest`
   - `jsdom`
-- [ ] Create Vite and TypeScript config files.
-- [ ] Create `index.html`, `src/main.tsx`, and a minimal `src/App.tsx`.
-- [ ] Run `npm install`.
-- [ ] Run `npm run build` and confirm the scaffold builds.
+- [x] Create Vite and TypeScript config files.
+- [x] Create `index.html`, `src/main.tsx`, and a minimal `src/App.tsx`.
+- [x] Run `npm install`.
+- [x] Run `npm run build` and confirm the scaffold builds.
 
 ### Task 2: Add App Providers And Theme
 
-- [ ] Create `src/app/theme/theme.ts` with a dark palette:
+- [x] Create `src/app/theme/theme.ts` with a dark palette:
   - app background near `#0b0f17`;
   - sidebar surface near `#111722`;
   - panel surface near `#161d2a`;
   - primary purple near `#7c3aed`;
   - readable white and muted gray text;
   - compact `8px` border radius by default.
-- [ ] Configure MUI typography for compact desktop UI and Russian copy readability.
-- [ ] Add component overrides for buttons, cards/papers, text fields, tabs, and list items so defaults match the dark operational UI.
-- [ ] Create `src/app/providers/AppProviders.tsx` with `ThemeProvider`, `CssBaseline`, `QueryClientProvider`, and `BrowserRouter`.
-- [ ] Wire `AppProviders` in `src/App.tsx`.
-- [ ] Run `npm run build`.
+- [x] Configure MUI typography for compact desktop UI and Russian copy readability.
+- [x] Add component overrides for buttons, cards/papers, text fields, tabs, and list items so defaults match the dark operational UI.
+- [x] Create `src/app/providers/AppProviders.tsx` with `ThemeProvider`, `CssBaseline`, `QueryClientProvider`, and `BrowserRouter`.
+- [x] Wire `AppProviders` in `src/App.tsx`.
+- [x] Run `npm run build`.
 
 ### Task 3: Add Routing And Shell
 
-- [ ] Create `src/app/router/AppRouter.tsx` with the route tree from `MP-04`.
-- [ ] Redirect `/` and unknown routes to `/app/projects`.
-- [ ] Create `src/features/shell/AppShell.tsx` with a fixed left sidebar on desktop and responsive collapsed layout on narrow screens.
-- [ ] Create `src/features/shell/Sidebar.tsx` with these primary labels:
+- [x] Create `src/app/router/AppRouter.tsx` with the route tree from `MP-04`.
+- [x] Redirect `/` and unknown routes to `/app/projects`.
+- [x] Create `src/features/shell/AppShell.tsx` with a fixed left sidebar on desktop and responsive collapsed layout on narrow screens.
+- [x] Create `src/features/shell/Sidebar.tsx` with these primary labels:
   - `Мои задачи`
   - `Календарь`
   - `Статистика`
   - `Настройки`
-- [ ] Add non-primary future navigation entries as disabled or visually secondary items only:
+- [x] Add non-primary future navigation entries as disabled or visually secondary items only:
   - `Приоритеты`
   - `Метки`
   - `Архив`
-- [ ] Add a static user profile block with `Алексей` and `alexey@mail.ru`.
-- [ ] Use MUI Icons for navigation and action icons.
-- [ ] Run `npm run build`.
+- [x] Add a static user profile block with `Алексей` and `alexey@mail.ru`.
+- [x] Use MUI Icons for navigation and action icons.
+- [x] Run `npm run build`.
 
 ### Task 4: Add Placeholder Screens
 
-- [ ] Create `src/features/auth/LoginPage.tsx` with a compact static login form layout and Russian labels for email, password, sign in, and sign up.
-- [ ] Create `src/features/projects/ProjectsPage.tsx` as the first authenticated screen with static rows reflecting reference screenshot 02:
+- [x] Create `src/features/auth/LoginPage.tsx` with a compact static login form layout and Russian labels for email, password, sign in, and sign up.
+- [x] Create `src/features/projects/ProjectsPage.tsx` as the first authenticated screen with static rows reflecting reference screenshot 02:
   - page title `Мои задачи`;
   - search field;
   - category filter control;
   - sorting control;
   - primary create button `Новая задача`;
   - project rows for `Бизнес`, `Работа`, `Учеба`, and `Личная жизнь`.
-- [ ] Create `src/features/projects/ProjectDetailPage.tsx` with static project header and task-list placeholder reflecting reference screenshot 01:
+- [x] Create `src/features/projects/ProjectDetailPage.tsx` with static project header and task-list placeholder reflecting reference screenshot 01:
   - back button;
   - project title `Бизнес`;
   - progress and deadline cards;
@@ -163,27 +163,27 @@
   - add-task row;
   - filters `Все`, `Не выполненные`, `Выполненные`;
   - static task rows.
-- [ ] Create `CalendarPage`, `StatsPage`, and `SettingsPage` placeholders using the same shell and panel styles.
-- [ ] Create `src/shared/ui/PageHeader.tsx` only if at least two pages share the same compact header pattern.
-- [ ] Run `npm run build`.
+- [x] Create `CalendarPage`, `StatsPage`, and `SettingsPage` placeholders using the same shell and panel styles.
+- [x] Create `src/shared/ui/PageHeader.tsx` only if at least two pages share the same compact header pattern.
+- [x] Run `npm run build`.
 
 ### Task 5: Add Focused Tests
 
-- [ ] Create `src/test/setup.ts` importing `@testing-library/jest-dom/vitest`.
-- [ ] Configure Vitest to use `jsdom` and `src/test/setup.ts`.
-- [ ] Create `src/app/router/AppRouter.test.tsx`.
-- [ ] Add a test that renders the app at `/` and expects `Мои задачи` to be visible.
-- [ ] Add a test that clicks `Календарь` and expects the calendar placeholder heading to be visible.
-- [ ] Add a test that clicks `Статистика` and expects the statistics placeholder heading to be visible.
-- [ ] Run `npm run test`.
-- [ ] Run `npm run build`.
+- [x] Create `src/test/setup.ts` importing `@testing-library/jest-dom/vitest`.
+- [x] Configure Vitest to use `jsdom` and `src/test/setup.ts`.
+- [x] Create `src/app/router/AppRouter.test.tsx`.
+- [x] Add a test that renders the app at `/` and expects `Мои задачи` to be visible.
+- [x] Add a test that clicks `Календарь` and expects the calendar placeholder heading to be visible.
+- [x] Add a test that clicks `Статистика` and expects the statistics placeholder heading to be visible.
+- [x] Run `npm run test`.
+- [x] Run `npm run build`.
 
 ### Task 6: Add Playwright Smoke Test
 
-- [ ] Create `playwright.config.ts` with `webServer` running `npm run dev -- --host 127.0.0.1`.
-- [ ] Create `tests/smoke.spec.ts`.
-- [ ] Add a smoke test that opens `/app/projects`, confirms `Мои задачи` is visible, and confirms sidebar navigation is visible.
-- [ ] Add a smoke test that opens `/app/projects/demo`, confirms `Бизнес` is visible, and confirms task tabs are visible.
+- [x] Create `playwright.config.ts` with `webServer` running `npm run dev -- --host 127.0.0.1`.
+- [x] Create `tests/smoke.spec.ts`.
+- [x] Add a smoke test that opens `/app/projects`, confirms `Мои задачи` is visible, and confirms sidebar navigation is visible.
+- [x] Add a smoke test that opens `/app/projects/demo`, confirms `Бизнес` is visible, and confirms task tabs are visible.
 - [ ] Run `npm run test:e2e` if Playwright browsers are installed.
 - [ ] If browsers are not installed, record the blocker and keep `npm run build` and `npm run test` as required verification for SP-01.
 
@@ -193,8 +193,8 @@
 - [ ] Open `/app/projects` and compare against `docs/assets/reference-design/screenshot-02-project-list-overview.png`.
 - [ ] Open `/app/projects/demo` and compare against `docs/assets/reference-design/screenshot-01-project-detail-task-list.png`.
 - [ ] Check a mobile-width viewport and confirm sidebar/content controls do not overlap.
-- [ ] Run `rg "screenshot-.*\\.jpg" docs/master-plan.md docs/assets/reference-design/README.md` and confirm no stale `.jpg` references remain in the source-of-truth screenshot docs.
-- [ ] Run `rg "SP-01|MP-05|MP-06|MP-07|MP-13|MP-14" docs/subplans/SP-01-foundation.md` and confirm the required cross-references are present.
+- [x] Run `rg "screenshot-.*\\.jpg" docs/master-plan.md docs/assets/reference-design/README.md` and confirm no stale `.jpg` references remain in the source-of-truth screenshot docs.
+- [x] Run `rg "SP-01|MP-05|MP-06|MP-07|MP-13|MP-14" docs/subplans/SP-01-foundation.md` and confirm the required cross-references are present.
 
 ## Acceptance Criteria
 
@@ -223,3 +223,10 @@
 - Keep this subplan focused on foundation and visual shell. `SP-02` owns Supabase schema and RLS, and `SP-03` owns real authentication and protected route behavior.
 - Use the real `.png` reference screenshots currently stored in `docs/assets/reference-design/`.
 - The shell may include secondary future navigation entries only as non-primary inactive UI, matching `MP-04`; do not create full feature pages for them in this subplan.
+
+### Completion Audit 2026-06-07
+
+- `npm install` completed from `package-lock.json`.
+- `npm run build` passed with Vite's chunk-size warning only.
+- `npm run test` passed: 1 test file, 3 tests.
+- Playwright, dev-server browser QA, and in-app-browser checks were not run because `AGENTS.md` now requires an explicit user request for browser verification.
