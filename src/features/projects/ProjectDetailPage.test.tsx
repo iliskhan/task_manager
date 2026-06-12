@@ -71,6 +71,20 @@ describe('ProjectDetailPage', () => {
     );
   });
 
+  test('passes the task search parameter into the Kanban board', () => {
+    mockProjectDetail(createProject({ id: 'project-1' }));
+
+    renderProjectDetail('/app/projects/project-1?taskId=task-1');
+
+    expect(KanbanBoard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectId: 'project-1',
+        initialTaskId: 'task-1',
+      }),
+      undefined,
+    );
+  });
+
   test('renders a controlled not-found state for missing projects', () => {
     mockProjectDetail(null);
 

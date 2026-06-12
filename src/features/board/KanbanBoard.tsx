@@ -12,7 +12,7 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   DEFAULT_TASK_POSITION,
   TASK_POSITION_STEP,
@@ -37,6 +37,7 @@ type KanbanBoardProps = {
   currentUserId: string;
   projectName: string;
   projectColor: string;
+  initialTaskId?: string;
 };
 
 type DrawerState =
@@ -49,6 +50,7 @@ export function KanbanBoard({
   currentUserId,
   projectName,
   projectColor,
+  initialTaskId,
 }: KanbanBoardProps) {
   const boardQuery = useProjectBoardQuery(workspaceId, projectId);
   const createTaskMutation = useCreateTaskMutation();
@@ -56,6 +58,7 @@ export function KanbanBoard({
   const moveTaskMutation = useMoveTaskMutation();
   const [drawerState, setDrawerState] = useState<DrawerState | null>(null);
   const [boardError, setBoardError] = useState<string | null>(null);
+  const [openedInitialTaskId, setOpenedInitialTaskId] = useState<string | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -73,6 +76,25 @@ export function KanbanBoard({
   };
   const columns = useMemo(() => createBoardColumns(boardData.tasks), [boardData.tasks]);
   const tasksByStatus = useMemo(() => groupTasksByStatus(boardData.tasks), [boardData.tasks]);
+
+  useEffect(() => {
+    if (!initialTaskId || openedInitialTaskId === initialTaskId || drawerState) {
+      return;
+    }
+
+    const initialTask = boardData.tasks.find((task) => task.id === initialTaskId);
+
+    if (!initialTask) {
+      return;
+    }
+
+    setDrawerState({
+      mode: 'edit',
+      task: initialTask,
+      defaultStatus: initialTask.status,
+    });
+    setOpenedInitialTaskId(initialTaskId);
+  }, [boardData.tasks, drawerState, initialTaskId, openedInitialTaskId]);
 
   const handleCreateClick = () => {
     setBoardError(null);

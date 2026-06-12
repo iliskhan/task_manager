@@ -9,6 +9,10 @@ vi.mock('../../features/projects/ProjectsPage', () => ({
   ProjectsPage: () => <h1>Мои задачи</h1>,
 }));
 
+vi.mock('../../features/calendar/CalendarPage', () => ({
+  CalendarPage: () => <h1>Календарь</h1>,
+}));
+
 const authenticatedAuth = createAuthValue({
   status: 'authenticated',
   profile: {

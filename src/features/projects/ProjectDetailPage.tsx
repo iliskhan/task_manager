@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useRef } from 'react';
-import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Link as RouterLink, useParams, useSearchParams } from 'react-router-dom';
 import { themeTokens } from '../../app/theme/theme';
 import { useAuth } from '../auth/useAuth';
 import { KanbanBoard } from '../board/KanbanBoard';
@@ -30,11 +30,13 @@ const deadlineColorByTone: Record<ProjectDeadlineTone, string> = {
 
 export function ProjectDetailPage() {
   const { projectId } = useParams();
+  const [searchParams] = useSearchParams();
   const { user, workspace } = useAuth();
   const projectQuery = useProjectDetailQuery(workspace?.id, projectId);
   const recordVisitMutation = useRecordProjectVisitMutation();
   const recordedProjectIdRef = useRef<string | null>(null);
   const project = projectQuery.data ?? null;
+  const initialTaskId = searchParams.get('taskId') ?? undefined;
 
   useEffect(() => {
     if (!project?.id || !workspace?.id || !user?.id) {
@@ -187,6 +189,7 @@ export function ProjectDetailPage() {
           currentUserId={user.id}
           projectName={project.name}
           projectColor={project.displayColor}
+          initialTaskId={initialTaskId}
         />
       ) : (
         <Alert severity="error">Не удалось определить текущую рабочую область.</Alert>

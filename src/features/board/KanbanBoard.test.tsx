@@ -74,9 +74,18 @@ describe('KanbanBoard', () => {
     expect(screen.getByRole('heading', { name: 'Редактировать задачу' })).toBeVisible();
     expect(screen.getByDisplayValue('Подготовить отчет')).toBeVisible();
   });
+
+  test('opens the edit drawer when an initial task id matches loaded board data', () => {
+    mockBoardData();
+
+    renderBoard({ initialTaskId: 'task-1' });
+
+    expect(screen.getByRole('heading', { name: 'Редактировать задачу' })).toBeVisible();
+    expect(screen.getByDisplayValue('Подготовить отчет')).toBeVisible();
+  });
 });
 
-function renderBoard() {
+function renderBoard(options: { initialTaskId?: string } = {}) {
   return render(
     <ThemeProvider theme={appTheme}>
       <KanbanBoard
@@ -85,6 +94,7 @@ function renderBoard() {
         currentUserId="user-1"
         projectName="Проект"
         projectColor="#42a5ff"
+        initialTaskId={options.initialTaskId}
       />
     </ThemeProvider>,
   );
