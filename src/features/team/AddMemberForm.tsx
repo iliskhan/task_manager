@@ -29,7 +29,11 @@ export function AddMemberForm({
     }
 
     setFieldError(null);
-    await onSubmit(result.data.email);
+    try {
+      await onSubmit(result.data.email);
+    } catch {
+      // The parent mutation owns the displayed error state.
+    }
   };
 
   return (

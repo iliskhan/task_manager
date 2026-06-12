@@ -65,6 +65,7 @@ type ParseResult =
 type HandleAddWorkspaceMemberInput = {
   callerUserId: string | null;
   client: AddWorkspaceMemberClient;
+  visibleClient?: AddWorkspaceMemberClient;
   body: unknown;
 };
 
@@ -112,6 +113,7 @@ export function parseAddWorkspaceMemberRequest(body: unknown): ParseResult {
 export async function handleAddWorkspaceMember({
   callerUserId,
   client,
+  visibleClient,
   body,
 }: HandleAddWorkspaceMemberInput): Promise<HandlerResult> {
   if (!callerUserId) {
@@ -130,7 +132,8 @@ export async function handleAddWorkspaceMember({
     };
   }
 
-  const ownerResponse = await client
+  const callerVisibleClient = visibleClient ?? client;
+  const ownerResponse = await callerVisibleClient
     .from('workspace_members')
     .select('role')
     .eq('workspace_id', parsed.value.workspaceId)
@@ -145,17 +148,54 @@ export async function handleAddWorkspaceMember({
     return errorResult(403, 'not_owner', 'Добавлять участников может только владелец.');
   }
 
-  const profileResponse = await client
-    .from('profiles')
-    .select('id,email,display_name,avatar_url')
-    .ilike('email', parsed.value.email)
-    .maybeSingle();
+  let profile: ProfileRow | null = null;
 
-  if (profileResponse.error) {
-    return internalError();
+  if (visibleClient) {
+    const visibleProfileResponse = await visibleClient
+      .from('profiles')
+      .select('id,email,display_name,avatar_url')
+      .ilike('email', parsed.value.email)
+      .maybeSingle();
+
+    if (visibleProfileResponse.error) {
+      return internalError();
+    }
+
+    const visibleProfile = (visibleProfileResponse as SupabaseResponse<ProfileRow | null>).data;
+
+    if (visibleProfile) {
+      const visibleExistingMemberResponse = await visibleClient
+        .from('workspace_members')
+        .select('user_id')
+        .eq('workspace_id', parsed.value.workspaceId)
+        .eq('user_id', visibleProfile.id)
+        .maybeSingle();
+
+      if (visibleExistingMemberResponse.error) {
+        return internalError();
+      }
+
+      if ((visibleExistingMemberResponse as SupabaseResponse<WorkspaceMemberRow | null>).data) {
+        return errorResult(409, 'already_member', 'Пользователь уже состоит в команде.');
+      }
+
+      profile = visibleProfile;
+    }
   }
 
-  const profile = (profileResponse as SupabaseResponse<ProfileRow | null>).data;
+  if (!profile) {
+    const profileResponse = await client
+      .from('profiles')
+      .select('id,email,display_name,avatar_url')
+      .ilike('email', parsed.value.email)
+      .maybeSingle();
+
+    if (profileResponse.error) {
+      return internalError();
+    }
+
+    profile = (profileResponse as SupabaseResponse<ProfileRow | null>).data;
+  }
 
   if (!profile) {
     return errorResult(404, 'user_not_found', 'Пользователь с таким email не найден.');

@@ -55,6 +55,7 @@ export default {
       const result = await handleAddWorkspaceMember({
         callerUserId: user.id,
         client: adminClient,
+        visibleClient: userClient,
         body: await readJson(req),
       });
 

@@ -27,6 +27,19 @@ describe('AddMemberForm', () => {
 
     expect(onSubmit).toHaveBeenCalledWith('member@example.com');
   });
+
+  test('does not rethrow submit errors handled by the parent mutation', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockRejectedValue(new Error('already member'));
+    renderAddMemberForm({ onSubmit });
+
+    await user.type(screen.getByRole('textbox', { name: /Email/i }), 'member@example.com');
+    await expect(
+      user.click(screen.getByRole('button')),
+    ).resolves.toBeUndefined();
+
+    expect(onSubmit).toHaveBeenCalledWith('member@example.com');
+  });
 });
 
 function renderAddMemberForm(

@@ -142,6 +142,34 @@ describe('handleAddWorkspaceMember', () => {
     });
   });
 
+  test('rejects duplicate visible workspace memberships before admin lookup', async () => {
+    const adminClient = createClient();
+    const visibleClient = createClient({
+      workspace_members: [
+        createMembership({ user_id: ownerId, role: 'owner' }),
+        createMembership({ user_id: memberId, role: 'member' }),
+      ],
+      profiles: [createProfile()],
+    });
+
+    const result = await handleAddWorkspaceMember({
+      callerUserId: ownerId,
+      client: adminClient,
+      visibleClient,
+      body: {
+        workspaceId,
+        email: 'member@example.com',
+        role: 'member',
+      },
+    });
+
+    expect(result).toMatchObject({
+      status: 409,
+      body: { code: 'already_member' },
+    });
+    expect(adminClient.calls).toEqual([]);
+  });
+
   test('adds an existing registered member and writes activity', async () => {
     const client = createClient({
       workspace_members: [createMembership({ user_id: ownerId, role: 'owner' })],

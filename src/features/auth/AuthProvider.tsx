@@ -40,12 +40,16 @@ type AuthState = {
 
 type AuthProviderProps = {
   children: ReactNode;
+  authRequestTimeoutMs?: number;
   client?: AuthClient;
   bootstrapAuthWorkspace?: (
     client: AuthClient,
     user: User,
   ) => Promise<AuthWorkspaceState>;
 };
+
+const DEFAULT_AUTH_REQUEST_TIMEOUT_MS = 8_000;
+const AUTH_REQUEST_TIMEOUT_ERROR_MESSAGE = 'Supabase request timed out.';
 
 const initialState: AuthState = {
   status: 'loading',
@@ -57,6 +61,7 @@ const initialState: AuthState = {
 
 export function AuthProvider({
   children,
+  authRequestTimeoutMs = DEFAULT_AUTH_REQUEST_TIMEOUT_MS,
   client = supabase,
   bootstrapAuthWorkspace = ensureAuthWorkspace,
 }: AuthProviderProps) {
@@ -93,7 +98,11 @@ export function AuthProvider({
       }));
 
       try {
-        const workspaceState = await bootstrapAuthWorkspace(client, nextSession.user);
+        const workspaceState = await withTimeout(
+          bootstrapAuthWorkspace(client, nextSession.user),
+          authRequestTimeoutMs,
+          AUTH_REQUEST_TIMEOUT_ERROR_MESSAGE,
+        );
 
         if (!mountedRef.current || requestIdRef.current !== requestId) {
           return;
@@ -120,30 +129,48 @@ export function AuthProvider({
         });
       }
     },
-    [bootstrapAuthWorkspace, client],
+    [authRequestTimeoutMs, bootstrapAuthWorkspace, client],
   );
 
   useEffect(() => {
     mountedRef.current = true;
 
-    void client.auth.getSession().then(({ data, error }) => {
-      if (!mountedRef.current) {
-        return;
-      }
+    void withTimeout(
+      client.auth.getSession(),
+      authRequestTimeoutMs,
+      AUTH_REQUEST_TIMEOUT_ERROR_MESSAGE,
+    )
+      .then(({ data, error }) => {
+        if (!mountedRef.current) {
+          return;
+        }
 
-      if (error) {
+        if (error) {
+          setState({
+            status: 'error',
+            session: null,
+            user: null,
+            workspaceState: null,
+            error,
+          });
+          return;
+        }
+
+        void applySession(data.session);
+      })
+      .catch((error) => {
+        if (!mountedRef.current) {
+          return;
+        }
+
         setState({
           status: 'error',
           session: null,
           user: null,
           workspaceState: null,
-          error,
+          error: normalizeError(error),
         });
-        return;
-      }
-
-      void applySession(data.session);
-    });
+      });
 
     const {
       data: { subscription },
@@ -155,11 +182,15 @@ export function AuthProvider({
       mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [applySession, client]);
+  }, [applySession, authRequestTimeoutMs, client]);
 
   const signIn = useCallback(
     async (credentials: AuthCredentials) => {
-      const { data, error } = await client.auth.signInWithPassword(credentials);
+      const { data, error } = await withTimeout(
+        client.auth.signInWithPassword(credentials),
+        authRequestTimeoutMs,
+        AUTH_REQUEST_TIMEOUT_ERROR_MESSAGE,
+      );
 
       if (error) {
         throw error;
@@ -167,12 +198,16 @@ export function AuthProvider({
 
       await applySession(data.session);
     },
-    [applySession, client],
+    [applySession, authRequestTimeoutMs, client],
   );
 
   const signUp = useCallback(
     async (credentials: AuthCredentials) => {
-      const { data, error } = await client.auth.signUp(credentials);
+      const { data, error } = await withTimeout(
+        client.auth.signUp(credentials),
+        authRequestTimeoutMs,
+        AUTH_REQUEST_TIMEOUT_ERROR_MESSAGE,
+      );
 
       if (error) {
         throw error;
@@ -180,18 +215,22 @@ export function AuthProvider({
 
       await applySession(data.session);
     },
-    [applySession, client],
+    [applySession, authRequestTimeoutMs, client],
   );
 
   const signOut = useCallback(async () => {
-    const { error } = await client.auth.signOut();
+    const { error } = await withTimeout(
+      client.auth.signOut(),
+      authRequestTimeoutMs,
+      AUTH_REQUEST_TIMEOUT_ERROR_MESSAGE,
+    );
 
     if (error) {
       throw error;
     }
 
     await applySession(null);
-  }, [applySession, client]);
+  }, [applySession, authRequestTimeoutMs, client]);
 
   const refreshWorkspace = useCallback(async () => {
     if (state.session) {
@@ -227,4 +266,31 @@ export function AuthProvider({
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+function withTimeout<T>(
+  request: PromiseLike<T>,
+  timeoutMs: number,
+  timeoutMessage: string,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+
+    Promise.resolve(request).then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
+function normalizeError(error: unknown) {
+  return error instanceof Error ? error : new Error('Auth request failed.');
 }

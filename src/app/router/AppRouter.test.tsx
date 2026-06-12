@@ -48,6 +48,15 @@ describe('AppRouter', () => {
     ).toBeVisible();
   });
 
+  test('shows a workspace load error without a loading spinner', () => {
+    renderRouter('/app/projects', createAuthValue({ status: 'error' }));
+
+    expect(
+      screen.getByText('Не удалось загрузить рабочее пространство'),
+    ).toBeVisible();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  });
+
   test('keeps authenticated sidebar navigation working', async () => {
     renderRouter('/app/projects', authenticatedAuth);
 

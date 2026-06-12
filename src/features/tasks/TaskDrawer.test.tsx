@@ -106,6 +106,8 @@ describe('TaskDrawer', () => {
       boxSizing: 'border-box',
       right: '0px',
       overflowX: 'hidden',
+      transform: 'none',
+      transition: 'none',
     });
     expect(screen.getByTestId('task-drawer-actions')).toHaveStyle({
       flexWrap: 'wrap',

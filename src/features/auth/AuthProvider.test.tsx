@@ -1,6 +1,6 @@
 import type { Session, User } from '@supabase/supabase-js';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { AuthProvider } from './AuthProvider';
 import { useAuth } from './useAuth';
 
@@ -36,6 +36,10 @@ const workspace = {
 };
 
 describe('AuthProvider', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   test('exposes loading while the initial session request is pending', () => {
     const client = createAuthClient({
       getSession: () => new Promise(() => undefined),
@@ -44,6 +48,40 @@ describe('AuthProvider', () => {
     renderAuthProvider(client);
 
     expect(screen.getByText('loading')).toBeVisible();
+  });
+
+  test('exposes an error when the initial session request times out', async () => {
+    vi.useFakeTimers();
+    const client = createAuthClient({
+      getSession: () => new Promise(() => undefined),
+    });
+
+    renderAuthProvider(client, vi.fn(), { authRequestTimeoutMs: 50 });
+
+    expect(screen.getByText('loading')).toBeVisible();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50);
+    });
+
+    expect(screen.getByText('error')).toBeVisible();
+  });
+
+  test('exposes an error when workspace bootstrap times out', async () => {
+    vi.useFakeTimers();
+    const client = createAuthClient({
+      getSession: async () => ({ data: { session }, error: null }),
+    });
+    const bootstrap = vi.fn(() => new Promise(() => undefined));
+
+    renderAuthProvider(client, bootstrap, { authRequestTimeoutMs: 50 });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50);
+    });
+
+    expect(screen.getByText('error')).toBeVisible();
+    expect(bootstrap).toHaveBeenCalledWith(client, user);
   });
 
   test('exposes unauthenticated when Supabase has no session', async () => {
@@ -90,9 +128,14 @@ function AuthStateProbe() {
 function renderAuthProvider(
   client: ReturnType<typeof createAuthClient>,
   bootstrap = vi.fn(),
+  options: Partial<Parameters<typeof AuthProvider>[0]> = {},
 ) {
   return render(
-    <AuthProvider bootstrapAuthWorkspace={bootstrap} client={client}>
+    <AuthProvider
+      authRequestTimeoutMs={options.authRequestTimeoutMs}
+      bootstrapAuthWorkspace={bootstrap}
+      client={client}
+    >
       <AuthStateProbe />
     </AuthProvider>,
   );

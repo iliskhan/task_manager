@@ -83,6 +83,7 @@ export function TaskDrawer({
       anchor="right"
       open={open}
       onClose={onClose}
+      transitionDuration={fullScreen ? 0 : undefined}
       slotProps={{
         paper: {
           sx: {
@@ -91,6 +92,8 @@ export function TaskDrawer({
             right: 0,
             boxSizing: 'border-box',
             overflowX: 'hidden',
+            transform: fullScreen ? 'none !important' : undefined,
+            transition: fullScreen ? 'none !important' : undefined,
             p: { xs: 2, sm: 3 },
             backgroundColor: 'background.paper',
           },

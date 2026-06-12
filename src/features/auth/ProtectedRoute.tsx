@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { Navigate } from 'react-router-dom';
 import { themeTokens } from '../../app/theme/theme';
 import { useAuth } from './useAuth';
@@ -20,7 +20,12 @@ export function ProtectedRoute({ children }: RouteGuardProps) {
   }
 
   if (auth.status === 'error') {
-    return <AuthRouteState message="Не удалось загрузить рабочее пространство" />;
+    return (
+      <AuthRouteState
+        message="Не удалось загрузить рабочее пространство"
+        variant="error"
+      />
+    );
   }
 
   return children;
@@ -40,7 +45,13 @@ export function GuestRoute({ children }: RouteGuardProps) {
   return children;
 }
 
-function AuthRouteState({ message }: { message: string }) {
+function AuthRouteState({
+  message,
+  variant = 'loading',
+}: {
+  message: string;
+  variant?: 'loading' | 'error';
+}) {
   return (
     <Box
       sx={{
@@ -52,8 +63,14 @@ function AuthRouteState({ message }: { message: string }) {
       }}
     >
       <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
-        <CircularProgress size={28} />
-        <Typography color="text.secondary">{message}</Typography>
+        {variant === 'loading' ? (
+          <>
+            <CircularProgress size={28} />
+            <Typography color="text.secondary">{message}</Typography>
+          </>
+        ) : (
+          <Alert severity="error">{message}</Alert>
+        )}
       </Stack>
     </Box>
   );
