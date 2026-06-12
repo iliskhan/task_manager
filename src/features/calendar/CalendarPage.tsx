@@ -1,9 +1,7 @@
 import ChevronLeft from '@mui/icons-material/ChevronLeft';
 import ChevronRight from '@mui/icons-material/ChevronRight';
 import {
-  Alert,
   Box,
-  CircularProgress,
   IconButton,
   Paper,
   Stack,
@@ -13,6 +11,7 @@ import { useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { themeTokens } from '../../app/theme/theme';
 import { PageHeader } from '../../shared/ui/PageHeader';
+import { StatePanel } from '../../shared/ui/StatePanel';
 import { useAuth } from '../auth/useAuth';
 import { useCalendarDeadlinesQuery } from './calendarQueries';
 import type { CalendarTaskDeadline } from './calendarTypes';
@@ -66,14 +65,11 @@ export function CalendarPage() {
           </Stack>
 
           {deadlinesQuery.isLoading ? (
-            <Stack spacing={1.5} sx={{ py: 8, alignItems: 'center' }}>
-              <CircularProgress size={28} />
-              <Typography color="text.secondary">Загружаем календарь...</Typography>
-            </Stack>
+            <StatePanel state="loading" message="Загружаем календарь..." />
           ) : null}
 
           {deadlinesQuery.isError ? (
-            <Alert severity="error">Не удалось загрузить календарь.</Alert>
+            <StatePanel state="error" message="Не удалось загрузить календарь." />
           ) : null}
 
           {!deadlinesQuery.isLoading && !deadlinesQuery.isError ? (
@@ -130,7 +126,7 @@ export function CalendarPage() {
           ) : null}
 
           {!deadlinesQuery.isLoading && !deadlinesQuery.isError && deadlines.length === 0 ? (
-            <Alert severity="info">В задачах пока нет дедлайнов.</Alert>
+            <StatePanel state="empty" message="В задачах пока нет дедлайнов." />
           ) : null}
         </Stack>
       </Paper>

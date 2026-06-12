@@ -26,7 +26,7 @@ describe('StatsPage', () => {
 
     const { rerender } = renderStatsPage();
 
-    expect(screen.getByText('Загружаем статистику...')).toBeVisible();
+    expect(screen.getByRole('status')).toHaveTextContent('Загружаем статистику...');
 
     mockStatsQuery({ isError: true });
     rerender(
@@ -35,7 +35,15 @@ describe('StatsPage', () => {
       </ThemeProvider>,
     );
 
-    expect(screen.getByText('Не удалось загрузить статистику.')).toBeVisible();
+    expect(screen.getByRole('alert')).toHaveTextContent('Не удалось загрузить статистику.');
+  });
+
+  test('renders empty dashboard state as a polite status', () => {
+    mockStatsQuery();
+
+    renderStatsPage();
+
+    expect(screen.getByRole('status')).toHaveTextContent('Данных для статистики пока нет.');
   });
 
   test('renders summary metrics, statuses, deadlines, and recent activity', () => {

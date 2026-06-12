@@ -1,8 +1,9 @@
 import Add from '@mui/icons-material/Add';
-import { Alert, Box, Button, CircularProgress, Paper, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Paper, Stack, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { themeTokens } from '../../app/theme/theme';
 import { PageHeader } from '../../shared/ui/PageHeader';
+import { StatePanel } from '../../shared/ui/StatePanel';
 import { useAuth } from '../auth/useAuth';
 import { ProjectCard } from './ProjectCard';
 import { ProjectFormDialog, type ProjectFormValues } from './ProjectFormDialog';
@@ -145,23 +146,19 @@ export function ProjectsPage() {
         </Box>
 
         {projectListQuery.isLoading ? (
-          <Stack spacing={1.5} sx={{ py: 8, alignItems: 'center' }}>
-            <CircularProgress size={28} />
-            <Typography color="text.secondary">Загружаем проекты...</Typography>
-          </Stack>
+          <StatePanel state="loading" message="Загружаем проекты..." />
         ) : null}
 
         {projectListQuery.isError ? (
-          <Alert severity="error">Не удалось загрузить проекты.</Alert>
+          <StatePanel state="error" message="Не удалось загрузить проекты." />
         ) : null}
 
         {!projectListQuery.isLoading && !projectListQuery.isError && visibleProjects.length === 0 ? (
-          <Box sx={{ py: 8, textAlign: 'center' }}>
-            <Typography sx={{ fontWeight: 800 }}>Проекты не найдены</Typography>
-            <Typography color="text.secondary" sx={{ mt: 0.8 }}>
-              Измените фильтры или создайте новый проект.
-            </Typography>
-          </Box>
+          <StatePanel
+            state="empty"
+            message="Проекты не найдены"
+            detail="Измените фильтры или создайте новый проект."
+          />
         ) : null}
 
         <Stack spacing={1.4}>

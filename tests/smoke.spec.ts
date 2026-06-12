@@ -39,6 +39,38 @@ test('renders a seeded project detail page', async ({ page }) => {
   await expect(page.getByRole('tab', { name: 'Статистика' })).toBeVisible();
 });
 
+test('covers the MVP project task calendar statistics path', async ({ page }) => {
+  const taskTitle = `Smoke task ${Date.now()}`;
+
+  await signInAsSeededOwner(page);
+  await page.goto('/app/projects/20000000-0000-4000-8000-000000000001');
+
+  await page.getByRole('button', { name: 'Добавить задачу' }).click();
+  await page.getByLabel('Название задачи').fill(taskTitle);
+  await page.getByLabel('Описание').fill('Проверка MVP smoke-пути');
+  await page.getByLabel('Срок').fill('2026-09-20');
+  await page.getByRole('button', { name: 'Создать' }).click();
+
+  await expect(page.getByRole('button', { name: new RegExp(taskTitle) })).toBeVisible();
+
+  await page.getByRole('button', { name: new RegExp(taskTitle) }).click();
+  await page.getByLabel('Статус').click();
+  await page.getByRole('option', { name: 'Готово' }).click();
+  await page.getByRole('button', { name: 'Сохранить' }).click();
+
+  await expect(page.getByRole('button', { name: new RegExp(taskTitle) })).toBeVisible();
+
+  await page.getByRole('link', { name: /Мои задачи/i }).click();
+  await expect(page.getByRole('link', { name: /Бизнес/i })).toBeVisible();
+  await expect(page.getByLabel(/Прогресс проекта Бизнес/i)).toBeVisible();
+
+  await page.getByRole('link', { name: /Календарь/i }).click();
+  await expect(page.getByRole('heading', { name: 'Календарь' })).toBeVisible();
+
+  await page.getByRole('link', { name: /Статистика/i }).click();
+  await expect(page.getByRole('heading', { name: 'Статистика' })).toBeVisible();
+});
+
 async function signInAsSeededOwner(page: Page) {
   await page.goto('/login');
   await page.getByLabel('Email').fill('owner@example.com');

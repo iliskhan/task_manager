@@ -177,6 +177,47 @@ export function Sidebar({ width }: SidebarProps) {
         })}
       </List>
 
+      <Box
+        sx={{
+          display: { xs: 'flex', md: 'none' },
+          alignItems: 'center',
+          gap: 1.4,
+          mx: 2,
+          mb: 2,
+          p: 1.4,
+          borderRadius: 2,
+          border: `1px solid ${themeTokens.border}`,
+          backgroundColor: themeTokens.panelSoft,
+          minWidth: 0,
+        }}
+      >
+        <Avatar
+          sx={{
+            width: 38,
+            height: 38,
+            fontWeight: 800,
+            background: 'linear-gradient(135deg, #6d35d1, #8b5cf6)',
+          }}
+        >
+          {avatarInitial}
+        </Avatar>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography noWrap sx={{ fontWeight: 700 }}>
+            {profileName}
+          </Typography>
+          <Typography color="text.secondary" variant="body2" noWrap>
+            {profileEmail}
+          </Typography>
+        </Box>
+        <IconButton
+          aria-label="Выйти из мобильного профиля"
+          color="inherit"
+          onClick={() => void signOut()}
+        >
+          <LogoutOutlined fontSize="small" />
+        </IconButton>
+      </Box>
+
       <Box sx={{ flex: 1, display: { xs: 'none', md: 'block' } }} />
 
       <Box

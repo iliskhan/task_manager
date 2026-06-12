@@ -1,7 +1,5 @@
 import {
-  Alert,
   Box,
-  CircularProgress,
   LinearProgress,
   Paper,
   Stack,
@@ -10,6 +8,7 @@ import {
 import { type ReactNode } from 'react';
 import { themeTokens } from '../../app/theme/theme';
 import { PageHeader } from '../../shared/ui/PageHeader';
+import { StatePanel } from '../../shared/ui/StatePanel';
 import { useAuth } from '../auth/useAuth';
 import { useWorkspaceStatsQuery } from './statsQueries';
 import type {
@@ -33,14 +32,11 @@ export function StatsPage() {
       />
 
       {statsQuery.isLoading ? (
-        <Stack spacing={1.5} sx={{ py: 8, alignItems: 'center' }}>
-          <CircularProgress size={28} />
-          <Typography color="text.secondary">Загружаем статистику...</Typography>
-        </Stack>
+        <StatePanel state="loading" message="Загружаем статистику..." />
       ) : null}
 
       {statsQuery.isError ? (
-        <Alert severity="error">Не удалось загрузить статистику.</Alert>
+        <StatePanel state="error" message="Не удалось загрузить статистику." />
       ) : null}
 
       {!statsQuery.isLoading && !statsQuery.isError && stats ? (
@@ -48,7 +44,7 @@ export function StatsPage() {
       ) : null}
 
       {!statsQuery.isLoading && !statsQuery.isError && !stats ? (
-        <Alert severity="info">Данных для статистики пока нет.</Alert>
+        <StatePanel state="empty" message="Данных для статистики пока нет." />
       ) : null}
     </Stack>
   );

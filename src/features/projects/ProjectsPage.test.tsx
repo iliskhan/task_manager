@@ -57,6 +57,24 @@ describe('ProjectsPage', () => {
     expect(screen.getByText('50%')).toBeVisible();
   });
 
+  test('renders accessible loading, error, and empty states', () => {
+    mockProjectQuery({ isLoading: true });
+
+    const { rerender } = renderProjectsPage();
+
+    expect(screen.getByRole('status')).toHaveTextContent('Загружаем проекты...');
+
+    mockProjectQuery({ isError: true });
+    rerender(renderProjectsPageTree());
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Не удалось загрузить проекты.');
+
+    mockProjectList([]);
+    rerender(renderProjectsPageTree());
+
+    expect(screen.getByRole('status')).toHaveTextContent('Проекты не найдены');
+  });
+
   test('searches active projects and can switch to archived projects', async () => {
     const user = userEvent.setup();
     mockProjectList([
@@ -134,21 +152,36 @@ describe('ProjectsPage', () => {
 });
 
 function renderProjectsPage() {
-  return render(
+  return render(renderProjectsPageTree());
+}
+
+function renderProjectsPageTree() {
+  return (
     <ThemeProvider theme={appTheme}>
       <MemoryRouter>
         <ProjectsPage />
       </MemoryRouter>
-    </ThemeProvider>,
+    </ThemeProvider>
   );
 }
 
 function mockProjectList(projects: ProjectListItem[]) {
+  mockProjectQuery({ data: projects });
+}
+
+function mockProjectQuery(
+  overrides: Partial<{
+    data: ProjectListItem[];
+    isLoading: boolean;
+    isError: boolean;
+    error: Error | null;
+  }> = {},
+) {
   vi.mocked(useProjectListQuery).mockReturnValue({
-    data: projects,
-    isLoading: false,
-    isError: false,
-    error: null,
+    data: overrides.data ?? [],
+    isLoading: overrides.isLoading ?? false,
+    isError: overrides.isError ?? false,
+    error: overrides.error ?? null,
   } as never);
 }
 

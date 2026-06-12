@@ -9,8 +9,8 @@ describe('Sidebar', () => {
   test('displays authenticated profile data', () => {
     renderSidebar();
 
-    expect(screen.getByText('Мария')).toBeVisible();
-    expect(screen.getByText('member@example.com')).toBeVisible();
+    expect(screen.getAllByText('Мария')[0]).toBeVisible();
+    expect(screen.getAllByText('member@example.com')[0]).toBeVisible();
   });
 
   test('calls signOut from the profile area', async () => {
@@ -20,6 +20,13 @@ describe('Sidebar', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Выйти' }));
 
     expect(signOut).toHaveBeenCalledTimes(1);
+  });
+
+  test('exposes profile logout from the compact mobile shell', () => {
+    renderSidebar();
+
+    expect(screen.getAllByText('member@example.com')[0]).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Выйти из мобильного профиля' })).toBeVisible();
   });
 });
 

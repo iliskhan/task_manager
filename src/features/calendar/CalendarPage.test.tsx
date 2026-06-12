@@ -33,7 +33,7 @@ describe('CalendarPage', () => {
 
     const { rerender } = renderCalendarPage();
 
-    expect(screen.getByText('Загружаем календарь...')).toBeVisible();
+    expect(screen.getByRole('status')).toHaveTextContent('Загружаем календарь...');
 
     mockCalendarQuery({ isError: true });
     rerender(
@@ -44,7 +44,15 @@ describe('CalendarPage', () => {
       </ThemeProvider>,
     );
 
-    expect(screen.getByText('Не удалось загрузить календарь.')).toBeVisible();
+    expect(screen.getByRole('alert')).toHaveTextContent('Не удалось загрузить календарь.');
+  });
+
+  test('renders empty deadline state as a polite status', () => {
+    mockCalendarQuery({ data: [] });
+
+    renderCalendarPage();
+
+    expect(screen.getByRole('status')).toHaveTextContent('В задачах пока нет дедлайнов.');
   });
 
   test('renders task deadlines with overdue state and project deep links', () => {
