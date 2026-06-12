@@ -5,9 +5,11 @@ import Check from '@mui/icons-material/Check';
 import CircleOutlined from '@mui/icons-material/CircleOutlined';
 import MoreVert from '@mui/icons-material/MoreVert';
 import {
+  Alert,
   Box,
   ButtonBase,
   Chip,
+  CircularProgress,
   IconButton,
   LinearProgress,
   Paper,
@@ -16,8 +18,12 @@ import {
   Tabs,
   Typography,
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import { themeTokens } from '../../app/theme/theme';
+import { useAuth } from '../auth/useAuth';
+import { useProjectDetailQuery, useRecordProjectVisitMutation } from './projectQueries';
+import type { ProjectDeadlineTone } from './projectTypes';
 
 const tasks = [
   { title: 'Заказать товар', date: '10.06.2024', done: false },
@@ -27,7 +33,72 @@ const tasks = [
   { title: 'Оплатить поставку', date: '14.06.2024', done: true },
 ];
 
+const deadlineColorByTone: Record<ProjectDeadlineTone, string> = {
+  muted: themeTokens.textMuted,
+  success: themeTokens.green,
+  warning: themeTokens.yellow,
+  danger: themeTokens.red,
+};
+
 export function ProjectDetailPage() {
+  const { projectId } = useParams();
+  const { user, workspace } = useAuth();
+  const projectQuery = useProjectDetailQuery(workspace?.id, projectId);
+  const recordVisitMutation = useRecordProjectVisitMutation();
+  const recordedProjectIdRef = useRef<string | null>(null);
+  const project = projectQuery.data ?? null;
+
+  useEffect(() => {
+    if (!project?.id || !workspace?.id || !user?.id) {
+      return;
+    }
+
+    if (recordedProjectIdRef.current === project.id) {
+      return;
+    }
+
+    recordedProjectIdRef.current = project.id;
+    recordVisitMutation.mutate({
+      workspaceId: workspace.id,
+      userId: user.id,
+      projectId: project.id,
+    });
+  }, [project?.id, recordVisitMutation, user?.id, workspace?.id]);
+
+  if (projectQuery.isLoading) {
+    return (
+      <Stack spacing={1.5} sx={{ minHeight: 360, alignItems: 'center', justifyContent: 'center' }}>
+        <CircularProgress size={30} />
+        <Typography color="text.secondary">Загружаем проект...</Typography>
+      </Stack>
+    );
+  }
+
+  if (projectQuery.isError) {
+    return (
+      <Stack spacing={3}>
+        <BackButton />
+        <Alert severity="error">Не удалось загрузить проект.</Alert>
+      </Stack>
+    );
+  }
+
+  if (!project) {
+    return (
+      <Stack spacing={3}>
+        <BackButton />
+        <Box>
+          <Typography component="h1" variant="h1">
+            Проект не найден
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 0.7 }}>
+            Он мог быть архивирован или недоступен для текущего рабочего пространства.
+          </Typography>
+        </Box>
+      </Stack>
+    );
+  }
+
   return (
     <Stack spacing={3}>
       <Box
@@ -38,41 +109,28 @@ export function ProjectDetailPage() {
           alignItems: 'center',
         }}
       >
-        <IconButton
-          component={RouterLink}
-          to="/app/projects"
-          aria-label="Назад к проектам"
-          sx={{
-            width: 60,
-            height: 60,
-            borderRadius: 2,
-            backgroundColor: themeTokens.panel,
-            border: `1px solid ${themeTokens.border}`,
-            justifySelf: { xs: 'start', lg: 'center' },
-          }}
-        >
-          <ArrowBack />
-        </IconButton>
+        <BackButton />
 
         <Box>
           <Typography component="h1" variant="h1">
-            Бизнес
+            {project.name}
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 0.7 }}>
-            Развитие и рост проекта
+            {project.description || 'Без описания'}
           </Typography>
         </Box>
 
         <InfoCard label="Прогресс">
           <Typography
-            color={themeTokens.blue}
+            color={project.displayColor}
             sx={{ fontSize: '1.05rem', fontWeight: 800 }}
           >
-            75%
+            {project.progress}%
           </Typography>
           <LinearProgress
+            aria-label={`Прогресс проекта ${project.name}`}
             variant="determinate"
-            value={75}
+            value={project.progress}
             sx={{
               mt: 0.7,
               width: 210,
@@ -81,7 +139,7 @@ export function ProjectDetailPage() {
               backgroundColor: '#31394b',
               '& .MuiLinearProgress-bar': {
                 borderRadius: 999,
-                backgroundColor: themeTokens.blue,
+                backgroundColor: project.displayColor,
               },
             }}
           />
@@ -100,12 +158,16 @@ export function ProjectDetailPage() {
           <CalendarMonthOutlined color="disabled" />
           <Box>
             <Typography color="text.secondary">Дедлайн</Typography>
-            <Typography sx={{ mt: 0.3 }}>15.06.2024</Typography>
-            <Typography color={themeTokens.red} variant="body2" sx={{ mt: 0.3 }}>
-              Осталось 5 дней
+            <Typography sx={{ mt: 0.3 }}>{project.deadlineStatus.dateText}</Typography>
+            <Typography
+              color={deadlineColorByTone[project.deadlineStatus.tone]}
+              variant="body2"
+              sx={{ mt: 0.3 }}
+            >
+              {project.deadlineStatus.statusText}
             </Typography>
           </Box>
-          <IconButton sx={{ ml: 'auto' }} aria-label="Действия проекта">
+          <IconButton sx={{ ml: 'auto' }} aria-label={`Действия проекта ${project.name}`}>
             <MoreVert />
           </IconButton>
         </Paper>
@@ -166,10 +228,30 @@ export function ProjectDetailPage() {
 
       <Stack spacing={1.2}>
         {tasks.map((task) => (
-          <TaskRow key={task.title} task={task} />
+          <TaskRow key={task.title} task={task} projectName={project.name} />
         ))}
       </Stack>
     </Stack>
+  );
+}
+
+function BackButton() {
+  return (
+    <IconButton
+      component={RouterLink}
+      to="/app/projects"
+      aria-label="Назад к проектам"
+      sx={{
+        width: 60,
+        height: 60,
+        borderRadius: 2,
+        backgroundColor: themeTokens.panel,
+        border: `1px solid ${themeTokens.border}`,
+        justifySelf: { xs: 'start', lg: 'center' },
+      }}
+    >
+      <ArrowBack />
+    </IconButton>
   );
 }
 
@@ -196,12 +278,14 @@ function InfoCard({
 
 function TaskRow({
   task,
+  projectName,
 }: {
   task: {
     title: string;
     date: string;
     done: boolean;
   };
+  projectName: string;
 }) {
   return (
     <Paper
@@ -243,7 +327,7 @@ function TaskRow({
           {task.title}
         </Typography>
         <Chip
-          label="Бизнес"
+          label={projectName}
           size="small"
           sx={{
             color: '#82b8ff',

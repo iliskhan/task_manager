@@ -5,6 +5,10 @@ import { describe, expect, test, vi } from 'vitest';
 import { AuthContext, type AuthContextValue } from '../../features/auth/authTypes';
 import { AppRouter } from './AppRouter';
 
+vi.mock('../../features/projects/ProjectsPage', () => ({
+  ProjectsPage: () => <h1>Мои задачи</h1>,
+}));
+
 const authenticatedAuth = createAuthValue({
   status: 'authenticated',
   profile: {
