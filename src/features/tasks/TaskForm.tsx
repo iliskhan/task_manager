@@ -105,11 +105,27 @@ export function TaskForm({
         </TextField>
       </Box>
 
-      <FormControl fullWidth>
-        <InputLabel variant="standard" htmlFor="task-assignee">
+      <FormControl fullWidth sx={{ minWidth: 0 }}>
+        <InputLabel
+          shrink
+          variant="standard"
+          htmlFor="task-assignee"
+          sx={{ maxWidth: '100%' }}
+        >
           Исполнитель
         </InputLabel>
         <NativeSelect
+          sx={{
+            mt: 1.1,
+            '& .MuiNativeSelect-select': {
+              boxSizing: 'border-box',
+              minHeight: 34,
+              overflow: 'hidden',
+              pr: 4,
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            },
+          }}
           inputProps={{
             id: 'task-assignee',
           }}

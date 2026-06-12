@@ -86,8 +86,11 @@ export function TaskDrawer({
       slotProps={{
         paper: {
           sx: {
-            width: fullScreen ? '100vw' : 460,
-            maxWidth: '100vw',
+            width: fullScreen ? '100dvw' : 460,
+            maxWidth: fullScreen ? '100dvw' : '100vw',
+            right: 0,
+            boxSizing: 'border-box',
+            overflowX: 'hidden',
             p: { xs: 2, sm: 3 },
             backgroundColor: 'background.paper',
           },
@@ -116,7 +119,18 @@ export function TaskDrawer({
           onChange={setValues}
         />
 
-        <Stack direction="row" spacing={1.2} sx={{ mt: 'auto', justifyContent: 'flex-end' }}>
+        <Stack
+          data-testid="task-drawer-actions"
+          direction="row"
+          spacing={1.2}
+          useFlexGap
+          sx={{
+            mt: 'auto',
+            justifyContent: 'flex-end',
+            flexWrap: 'wrap',
+            width: '100%',
+          }}
+        >
           <Button onClick={onClose} disabled={isSubmitting}>
             Отмена
           </Button>

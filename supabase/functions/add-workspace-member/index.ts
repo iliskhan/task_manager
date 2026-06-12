@@ -3,6 +3,7 @@ import {
   handleAddWorkspaceMember,
   type AddWorkspaceMemberErrorResponse,
 } from './handler.ts';
+import { readAddWorkspaceMemberEnv } from './env.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,11 +17,7 @@ export default {
     }
 
     try {
-      const supabaseUrl = readRequiredEnv('SUPABASE_URL');
-      const publishableKey = readKey('SUPABASE_PUBLISHABLE_KEYS') ?? readRequiredEnv('SUPABASE_ANON_KEY');
-      const secretKey =
-        readKey('SUPABASE_SECRET_KEYS') ??
-        readRequiredEnv(['SUPABASE', 'SERVICE', 'ROLE', 'KEY'].join('_'));
+      const { supabaseUrl, publishableKey, secretKey } = readAddWorkspaceMemberEnv();
       const authHeader = req.headers.get('Authorization') ?? '';
 
       const userClient = createClient(supabaseUrl, publishableKey, {
@@ -83,29 +80,4 @@ function json(body: unknown, status: number) {
     status,
     headers: corsHeaders,
   });
-}
-
-function readKey(envName: 'SUPABASE_PUBLISHABLE_KEYS' | 'SUPABASE_SECRET_KEYS') {
-  const raw = Deno.env.get(envName);
-
-  if (!raw) {
-    return null;
-  }
-
-  try {
-    const keys = JSON.parse(raw) as Record<string, string | undefined>;
-    return keys.default ?? Object.values(keys).find(Boolean) ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function readRequiredEnv(name: string) {
-  const value = Deno.env.get(name);
-
-  if (!value) {
-    throw new Error(`Missing ${name}`);
-  }
-
-  return value;
 }

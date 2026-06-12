@@ -13,6 +13,7 @@ describe('TaskDrawer', () => {
   beforeEach(() => {
     submit.mockReset();
     close.mockReset();
+    mockMobileViewport(false);
   });
 
   test('submits trimmed create values', async () => {
@@ -93,6 +94,24 @@ describe('TaskDrawer', () => {
       }),
     );
   });
+
+  test('uses viewport-safe drawer sizing and form label spacing on mobile', () => {
+    mockMobileViewport(true);
+
+    renderDrawer({ mode: 'create' });
+
+    expect(screen.getByRole('dialog')).toHaveStyle({
+      width: '100dvw',
+      maxWidth: '100dvw',
+      boxSizing: 'border-box',
+      right: '0px',
+      overflowX: 'hidden',
+    });
+    expect(screen.getByTestId('task-drawer-actions')).toHaveStyle({
+      flexWrap: 'wrap',
+    });
+    expect(screen.getByText('Исполнитель')).toHaveAttribute('data-shrink', 'true');
+  });
 });
 
 const labels: BoardLabel[] = [
@@ -134,6 +153,22 @@ function renderDrawer({
       />
     </ThemeProvider>,
   );
+}
+
+function mockMobileViewport(matches: boolean) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
 }
 
 function createTask(overrides: Partial<BoardTask> = {}): BoardTask {
