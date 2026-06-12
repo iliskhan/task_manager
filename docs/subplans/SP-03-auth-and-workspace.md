@@ -187,7 +187,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabasePublishableK
 
 ### Task 7: Add Auth E2E Smoke Coverage
 
-- [ ] Ensure local `.env` is configured manually with local Supabase URL and browser-safe key; do not commit `.env`. Deferred: local `.env` is developer-specific and remains ignored; configure it before browser/e2e QA.
+- [x] Ensure local `.env` is configured manually with local Supabase URL and browser-safe key; do not commit `.env`. Completed for local QA; `.env` remains ignored and uncommitted.
 - [x] Ensure `npx supabase db reset` has loaded seeded users.
 - [x] Update `tests/smoke.spec.ts`:
   - open `/login`;
@@ -196,7 +196,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabasePublishableK
   - click logout;
   - confirm `/login` renders again.
 - [x] Keep the existing project and detail smoke tests.
-- [ ] Run `npm run test:e2e` when browser verification is explicitly requested. Deferred: not explicitly requested for this implementation run.
+- [x] Run Playwright e2e smoke when browser verification is explicitly requested. Completed with the local Playwright CLI through bundled Node because the `npm` runner is blocked by Volta before tests start in this shell.
 
 ### Task 8: Final Verification
 
@@ -204,7 +204,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabasePublishableK
 - [x] Run `npx supabase test db`.
 - [x] Run `npm run build`.
 - [x] Run `npm run test`.
-- [ ] Run `npm run test:e2e` if explicitly requested for this implementation run. Deferred: not explicitly requested for this implementation run.
+- [x] Run Playwright e2e smoke if explicitly requested for this implementation run. Completed with the local Playwright CLI through bundled Node because the `npm` runner is blocked by Volta before tests start in this shell.
 - [x] Run `rg "service_role|SUPABASE_SERVICE_ROLE|sb_secret|eyJ" supabase src .env.example` and confirm no committed secret appears.
 - [x] Run `git status --short` and confirm only SP-03-owned files changed.
 
@@ -224,9 +224,9 @@ export const supabase = createClient<Database>(supabaseUrl, supabasePublishableK
 
 - `npx supabase db reset`
 - `npx supabase test db`
-- `npm run build`
-- `npm run test`
-- `npm run test:e2e`
+- Frontend build via bundled Node (`node node_modules/typescript/bin/tsc -b` and `node node_modules/vite/bin/vite.js build`)
+- Unit tests via bundled Node (`node node_modules/vitest/vitest.mjs run`)
+- Playwright e2e smoke via bundled Node (`node node_modules/@playwright/test/cli.js test` with Vite started by bundled Node)
 - Manual QA: unauthenticated `/app/projects` redirects to `/login`.
 - Manual QA: sign in with seeded local owner and confirm `/app/projects` opens.
 - Manual QA: click sidebar logout and confirm `/login` opens.

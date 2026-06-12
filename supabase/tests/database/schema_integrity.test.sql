@@ -1,6 +1,6 @@
 begin;
 
-select plan(39);
+select plan(42);
 
 select has_table('profiles');
 select has_table('workspaces');
@@ -104,6 +104,62 @@ select ok(
       and indexname = 'tasks_workspace_id_project_id_status_position_idx'
   ),
   'tasks has the kanban query index'
+);
+
+select ok(
+  has_schema_privilege('authenticated', 'public', 'USAGE'),
+  'authenticated role can use the public schema'
+);
+
+select ok(
+  not exists (
+    select 1
+    from (
+      values
+        ('profiles', 'SELECT'),
+        ('profiles', 'INSERT'),
+        ('profiles', 'UPDATE'),
+        ('workspaces', 'SELECT'),
+        ('workspaces', 'INSERT'),
+        ('workspaces', 'UPDATE'),
+        ('workspace_members', 'SELECT'),
+        ('workspace_members', 'INSERT'),
+        ('workspace_members', 'DELETE'),
+        ('projects', 'SELECT'),
+        ('projects', 'INSERT'),
+        ('projects', 'UPDATE'),
+        ('projects', 'DELETE'),
+        ('tasks', 'SELECT'),
+        ('tasks', 'INSERT'),
+        ('tasks', 'UPDATE'),
+        ('labels', 'SELECT'),
+        ('labels', 'INSERT'),
+        ('labels', 'UPDATE'),
+        ('labels', 'DELETE'),
+        ('task_labels', 'SELECT'),
+        ('task_labels', 'INSERT'),
+        ('task_labels', 'DELETE'),
+        ('project_visits', 'SELECT'),
+        ('project_visits', 'INSERT'),
+        ('project_visits', 'UPDATE'),
+        ('activity_events', 'SELECT'),
+        ('activity_events', 'INSERT')
+    ) as required(table_name, privilege_type)
+    where not has_table_privilege(
+      'authenticated',
+      format('public.%I', required.table_name),
+      required.privilege_type
+    )
+  ),
+  'authenticated role has table privileges required by RLS policies'
+);
+
+select ok(
+  has_function_privilege('authenticated', 'public.is_workspace_member(uuid)', 'EXECUTE')
+  and has_function_privilege('authenticated', 'public.workspace_member_role(uuid)', 'EXECUTE')
+  and has_function_privilege('authenticated', 'public.profile_shares_workspace(uuid)', 'EXECUTE')
+  and has_function_privilege('authenticated', 'public.is_workspace_creator(uuid)', 'EXECUTE'),
+  'authenticated role can execute RLS helper functions'
 );
 
 select ok(c.relrowsecurity, 'profiles RLS enabled')

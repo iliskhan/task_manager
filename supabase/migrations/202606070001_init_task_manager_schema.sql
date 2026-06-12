@@ -259,6 +259,23 @@ as $$
   );
 $$;
 
+grant usage on schema public to authenticated;
+
+grant select, insert, update on public.profiles to authenticated;
+grant select, insert, update on public.workspaces to authenticated;
+grant select, insert, delete on public.workspace_members to authenticated;
+grant select, insert, update, delete on public.projects to authenticated;
+grant select, insert, update on public.tasks to authenticated;
+grant select, insert, update, delete on public.labels to authenticated;
+grant select, insert, delete on public.task_labels to authenticated;
+grant select, insert, update on public.project_visits to authenticated;
+grant select, insert on public.activity_events to authenticated;
+
+grant execute on function public.is_workspace_member(uuid) to authenticated;
+grant execute on function public.workspace_member_role(uuid) to authenticated;
+grant execute on function public.profile_shares_workspace(uuid) to authenticated;
+grant execute on function public.is_workspace_creator(uuid) to authenticated;
+
 alter table public.profiles enable row level security;
 alter table public.workspaces enable row level security;
 alter table public.workspace_members enable row level security;
