@@ -16,6 +16,7 @@
 ### In Scope
 
 - Fix the mobile task drawer so it is fully inside a 390px viewport and its action buttons are not clipped.
+- Fix the mobile task drawer assignee field so the label and `Без исполнителя` value do not overlap.
 - Add a regression check for the task drawer at mobile viewport width.
 - Make `add-workspace-member` locally verifiable under `supabase functions serve` without committing secrets.
 - Preserve deployed Edge Function behavior that reads Supabase-provided runtime secrets.
@@ -36,6 +37,7 @@
 - Desktop and mobile project list, project search, project creation, project detail, Kanban create/edit flow, progress updates, calendar deep links, statistics, settings read state, invalid-email validation, and mobile logout were browser-verified.
 - `npm run test:e2e` passed: 5 Chromium tests.
 - `npx supabase db reset` passed and `npx supabase test db` passed: 3 files, 53 tests.
+- Finding 1a: in the same mobile `TaskDrawer` screenshot, the assignee field label/value overlap; `Без исполнителя` visually intersects with neighboring field text and makes the form look broken.
 - Finding 1: at a 390x844 viewport, `TaskDrawer` opens shifted to the right. Measured dialog bounds were approximately `left = 196`, `right = 586`, `width = 390` while the viewport width was `390`; the `Создать` button was visibly clipped.
 - Finding 2: settings add-member form returns `Не удалось добавить участника.` when adding existing `member@example.com`. `supabase functions serve` receives the request, but local `--env-file` skips `SUPABASE_*` names, so the function falls into its generic internal error path before returning `already_member`.
 - Non-finding: stale `AuthApiError: Invalid Refresh Token: Refresh Token Not Found` appeared after resetting the local database while the browser still held an old Supabase session. A fresh sign-in recovered normally.
@@ -43,6 +45,7 @@
 ## Files And Responsibilities
 
 - `src/features/tasks/TaskDrawer.tsx`: fix mobile drawer paper positioning/width and action row wrapping so the full drawer stays inside the viewport.
+- `src/features/tasks/TaskForm.tsx`: fix mobile spacing and label behavior for the assignee select so `Без исполнителя` never overlaps field labels or adjacent controls.
 - `tests/smoke.spec.ts`: add a mobile viewport regression check that opens the task drawer and asserts the dialog/action buttons are within viewport bounds.
 - `supabase/functions/add-workspace-member/env.ts`: new small helper for reading deployed and local function environment variables without logging secret values.
 - `supabase/functions/add-workspace-member/env.test.ts`: focused tests for deployed Supabase env names and local override env names.
@@ -74,14 +77,17 @@
 - [ ] Add a Playwright mobile regression step in `tests/smoke.spec.ts` that signs in, opens seeded project `20000000-0000-4000-8000-000000000001`, sets viewport to `390x844`, clicks `Добавить задачу`, and measures `[role="dialog"]`.
 - [ ] Assert the drawer bounds satisfy `left >= 0`, `right <= window.innerWidth`, and `width <= window.innerWidth`.
 - [ ] Assert the `Создать` button bounds satisfy `right <= window.innerWidth`.
+- [ ] Assert the assignee field text `Без исполнителя` does not overlap the field label or adjacent controls at `390x844`.
 - [ ] Run `npm run test:e2e` and confirm the new regression fails before the fix.
 
 ### Task 2: Fix Task Drawer Mobile Layout
 
 - [ ] Update `src/features/tasks/TaskDrawer.tsx` so the mobile drawer paper is anchored fully within the viewport.
+- [ ] Update `src/features/tasks/TaskForm.tsx` so the assignee select label/value spacing is stable on mobile.
 - [ ] Keep desktop width at the current 460px behavior.
 - [ ] Keep mobile width at `100vw` or `100dvw` with `boxSizing: 'border-box'`.
 - [ ] Ensure the action row can wrap or remain padded on narrow widths without clipping `Создать` or `Сохранить`.
+- [ ] Ensure `Без исполнителя` renders cleanly inside the assignee select value area without intersecting labels, helper text, or neighboring controls.
 - [ ] Run the focused Playwright mobile drawer regression and confirm it passes.
 - [ ] Run `npm run test -- src/features/tasks/TaskDrawer.test.tsx`.
 
@@ -124,6 +130,7 @@
 - [ ] Run in-app Browser QA at desktop and `390x844` mobile widths for:
   - project detail task drawer create mode;
   - project detail task drawer edit mode;
+  - mobile assignee select label/value spacing;
   - settings duplicate-member error path.
 - [ ] Run `git diff --check`.
 - [ ] Run `rg "service_role|SUPABASE_SERVICE_ROLE|sb_secret|eyJ" supabase src .env.example` and confirm no committed secret appears in code or browser env examples.
@@ -133,6 +140,7 @@
 ## Acceptance Criteria
 
 - At `390x844`, the task drawer is fully visible and neither `Создать` nor `Сохранить` is clipped.
+- At `390x844`, the task drawer assignee field does not overlap `Без исполнителя` with any label, helper text, or neighboring field.
 - Desktop task drawer behavior remains unchanged.
 - The add-member Edge Function can be served locally with an uncommitted temp env file that does not use skipped `SUPABASE_*` keys.
 - Submitting existing `member@example.com` from settings returns the user-visible duplicate-member message.
