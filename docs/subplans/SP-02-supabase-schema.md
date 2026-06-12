@@ -374,7 +374,7 @@ npx supabase gen types typescript --local > src/lib/supabase/database.types.ts
 - `npx supabase --version` reported `2.105.0`.
 - `npx supabase init` could not complete in this Codex sandbox because Volta needs write access to `C:\Users\iliskhan\AppData\Local\Volta`; the escalation request was rejected by the environment usage limit.
 - `supabase/config.toml` was added manually from the official Supabase CLI config documentation. Re-run `npx supabase init --force` only if you intentionally want to replace it with CLI defaults.
-- `src/lib/supabase/database.types.ts` is currently an empty failed-generation artifact and must not be treated as completed generated types. Regenerate it with `npx supabase gen types typescript --local` once the local Supabase database is running.
+- Initial type generation produced an empty failed-generation artifact while the local Supabase stack was unavailable; this was resolved later in this implementation run.
 - Fresh `npm run build` passed on 2026-06-07.
 - Fresh `npm run test` passed on 2026-06-07: 1 test file, 3 tests.
 - Fresh `npx supabase db reset` failed on 2026-06-07 because Docker Desktop's Linux engine pipe was unavailable: `//./pipe/dockerDesktopLinuxEngine`.
@@ -386,3 +386,10 @@ npx supabase gen types typescript --local > src/lib/supabase/database.types.ts
 - `npx supabase gen types typescript --local > src/lib/supabase/database.types.ts` passed on 2026-06-07, and the generated file includes `tasks` and `workspace_members`.
 - `npm run build`, `npm run test`, and `npm run test:e2e` passed after generated types were added.
 - `rg "service_role|SUPABASE_SERVICE_ROLE|sb_secret|eyJ" supabase src` returned no matches on 2026-06-07.
+
+### Follow-up Verification 2026-06-12
+
+- `npx supabase db reset` passed after local Docker/Supabase was available.
+- `npx supabase test db` passed after explicit `authenticated` grants were added to the schema migration.
+- The local seed users were updated with GoTrue-compatible non-null token fields so `owner@example.com` / `password123` can sign in through Supabase Auth.
+- `npm run build`, `npm run test`, and `npm run test:e2e` passed from the user's Windows terminal on 2026-06-12. In the Codex managed shell, npm may need escalated execution because this checkout resolves `npm` through Volta and Volta writes under `C:\Users\iliskhan\AppData\Local\Volta`.

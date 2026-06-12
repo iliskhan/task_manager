@@ -67,6 +67,14 @@ This repository is a new React + Supabase Task Manager project. Before making pr
 - Run Playwright, browser, visual QA, and in-app-browser checks only when the user explicitly requests them in the current task.
 - If a subplan lists Playwright or browser verification but the user has not requested it, record it as deferred rather than running it automatically.
 
+## Local Npm And Verification Commands
+
+- Prefer the repository scripts for verification: `npm run build`, `npm run test`, and `npm run test:e2e` when browser verification is explicitly requested.
+- In the Codex managed shell on this Windows checkout, `npm` may resolve through `C:\Program Files\Volta` and fail before running scripts with `Volta update error: Could not create directory C:\Users\iliskhan\AppData\Local\Volta`.
+- If that Volta sandbox error happens, rerun the same `npm run ...` command with escalated execution using the narrow prefix rule `["npm", "run"]`. This matches the user's normal Windows terminal results, where `npm run build`, `npm run test`, and `npm run test:e2e` pass.
+- Do not switch to bundled Node as the default substitute for npm in this repository. Use bundled Node only if escalated npm execution is unavailable or rejected, and clearly report that fallback.
+- Do not change the user's global Volta, NVM, or Windows `Path` setup unless the user explicitly asks for that system-level change.
+
 ## OpenAI Documentation Rule
 
 When working with OpenAI API, Codex, Agents SDK, tools, or Responses API, always use the OpenAI developer docs MCP first.

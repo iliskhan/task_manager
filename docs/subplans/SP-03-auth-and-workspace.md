@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` to implement this plan task-by-task. Steps should use checkbox syntax for tracking during execution.
 
-**Status:** Implemented (local env and Playwright run deferred)
+**Status:** Implemented and locally verified
 **Master references:** `MP-03`, `MP-04`, `MP-06`, `MP-07`, `MP-09`, `MP-11`, `MP-12`, `MP-13`, `MP-14`, `MP-15`
 **Depends on:** `SP-01-foundation.md`, `SP-02-supabase-schema.md`
 **Goal:** Add real Supabase email/password authentication, protected app routes, logout, profile creation, and one-workspace bootstrap while preserving the existing dark Russian UI shell.
@@ -196,7 +196,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabasePublishableK
   - click logout;
   - confirm `/login` renders again.
 - [x] Keep the existing project and detail smoke tests.
-- [x] Run Playwright e2e smoke when browser verification is explicitly requested. Completed with the local Playwright CLI through bundled Node because the `npm` runner is blocked by Volta before tests start in this shell.
+- [x] Run `npm run test:e2e` when browser verification is explicitly requested.
 
 ### Task 8: Final Verification
 
@@ -204,7 +204,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabasePublishableK
 - [x] Run `npx supabase test db`.
 - [x] Run `npm run build`.
 - [x] Run `npm run test`.
-- [x] Run Playwright e2e smoke if explicitly requested for this implementation run. Completed with the local Playwright CLI through bundled Node because the `npm` runner is blocked by Volta before tests start in this shell.
+- [x] Run `npm run test:e2e` if explicitly requested for this implementation run.
 - [x] Run `rg "service_role|SUPABASE_SERVICE_ROLE|sb_secret|eyJ" supabase src .env.example` and confirm no committed secret appears.
 - [x] Run `git status --short` and confirm only SP-03-owned files changed.
 
@@ -224,12 +224,14 @@ export const supabase = createClient<Database>(supabaseUrl, supabasePublishableK
 
 - `npx supabase db reset`
 - `npx supabase test db`
-- Frontend build via bundled Node (`node node_modules/typescript/bin/tsc -b` and `node node_modules/vite/bin/vite.js build`)
-- Unit tests via bundled Node (`node node_modules/vitest/vitest.mjs run`)
-- Playwright e2e smoke via bundled Node (`node node_modules/@playwright/test/cli.js test` with Vite started by bundled Node)
+- `npm run build`
+- `npm run test`
+- `npm run test:e2e`
 - Manual QA: unauthenticated `/app/projects` redirects to `/login`.
 - Manual QA: sign in with seeded local owner and confirm `/app/projects` opens.
 - Manual QA: click sidebar logout and confirm `/login` opens.
+
+Note: these `npm run ...` commands passed from the user's Windows terminal on 2026-06-12. The Codex managed shell may need escalated execution for npm because this checkout resolves `npm` through Volta and Volta writes under `C:\Users\iliskhan\AppData\Local\Volta`.
 
 ## Notes
 
