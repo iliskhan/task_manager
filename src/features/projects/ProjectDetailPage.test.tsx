@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { appTheme } from '../../app/theme/theme';
 import type { AuthContextValue } from '../auth/authTypes';
 import { useAuth } from '../auth/useAuth';
+import { KanbanBoard } from '../board/KanbanBoard';
 import { ProjectDetailPage } from './ProjectDetailPage';
 import {
   useProjectDetailQuery,
@@ -19,6 +20,10 @@ vi.mock('../auth/useAuth', () => ({
 vi.mock('./projectQueries', () => ({
   useProjectDetailQuery: vi.fn(),
   useRecordProjectVisitMutation: vi.fn(),
+}));
+
+vi.mock('../board/KanbanBoard', () => ({
+  KanbanBoard: vi.fn(() => <div>Канбан доска</div>),
 }));
 
 const recordVisitMutate = vi.fn();
@@ -41,6 +46,15 @@ describe('ProjectDetailPage', () => {
     expect(screen.getByRole('heading', { name: 'Реальный проект' })).toBeVisible();
     expect(screen.getByText('Описание из базы')).toBeVisible();
     expect(screen.getByText('50%')).toBeVisible();
+    expect(screen.getByText('Канбан доска')).toBeVisible();
+    expect(KanbanBoard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workspaceId: 'workspace-1',
+        projectId: 'project-1',
+        currentUserId: 'user-1',
+      }),
+      undefined,
+    );
   });
 
   test('records a visit for the current user and route project', async () => {
