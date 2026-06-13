@@ -101,10 +101,11 @@ describe('TaskDrawer', () => {
     renderDrawer({ mode: 'create' });
 
     expect(screen.getByRole('dialog')).toHaveStyle({
-      width: '100dvw',
-      maxWidth: '100dvw',
+      left: '0px',
+      right: '1px',
+      width: 'auto',
+      maxWidth: '100vw',
       boxSizing: 'border-box',
-      right: '0px',
       overflowX: 'hidden',
       transform: 'none',
       transition: 'none',

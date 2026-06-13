@@ -173,6 +173,10 @@
 - In-app Browser mobile QA at 390x844 passed after the drawer fix: dialog bounds stayed within the viewport, the create button was not clipped, `transform` and `transition` were `none`, and the assignee label/value spacing was clean.
 - Final `git diff --check` passed with only CRLF normalization warnings.
 - Final secret scans returned no matches for committed code, `.env.example`, or this subplan.
+- A fresh automation final QA pass found a Browser-only fractional viewport overflow after Playwright had passed: the mobile drawer measured `right=390.4` and `width=390.4` while `window.innerWidth` was `390`.
+- Tightened `src/features/tasks/TaskDrawer.test.tsx` so the mobile sizing contract fails before the fix, then updated `TaskDrawer` to stretch from `left: 0` to a `right: 1px` mobile inset with `maxWidth: 100vw`.
+- The focused drawer regression then passed, and the in-app Browser recheck at `390x844` passed with `dialog.right=389.4`, `createButton.right=372.6`, and clean assignee label/value spacing.
+- In-app Browser text entry could not cover the duplicate-member form path in this rerun because the Browser virtual clipboard was unavailable; `npm run test:e2e` covers that submission path.
 
 ## Acceptance Criteria
 

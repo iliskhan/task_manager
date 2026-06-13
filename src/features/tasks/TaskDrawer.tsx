@@ -87,9 +87,10 @@ export function TaskDrawer({
       slotProps={{
         paper: {
           sx: {
-            width: fullScreen ? '100dvw' : 460,
-            maxWidth: fullScreen ? '100dvw' : '100vw',
-            right: 0,
+            left: fullScreen ? 0 : 'auto',
+            right: fullScreen ? '1px' : 0,
+            width: fullScreen ? 'auto' : 460,
+            maxWidth: '100vw',
             boxSizing: 'border-box',
             overflowX: 'hidden',
             transform: fullScreen ? 'none !important' : undefined,
