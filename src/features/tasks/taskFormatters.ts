@@ -1,7 +1,6 @@
 import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS, type TaskPriority } from '../board/boardConstants';
 import type { BoardAssignee, BoardLabel } from '../board/boardTypes';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
+import { daysBetween, formatDate } from '../../shared/date/dateUtils';
 
 export type TaskDueDateTone = 'muted' | 'default' | 'warning' | 'danger';
 
@@ -21,13 +20,11 @@ export function formatTaskDueDate(dueDate: string | null, now = new Date()) {
     };
   }
 
-  const date = parseDateOnly(dueDate);
-  const today = getUtcDateOnly(now);
-  const daysUntilDue = Math.round((date.getTime() - today.getTime()) / DAY_MS);
+  const daysUntilDue = daysBetween(dueDate, now);
 
   if (daysUntilDue < 0) {
     return {
-      text: `${formatUtcDate(date)} · просрочено`,
+      text: `${formatDate(dueDate)} · просрочено`,
       tone: 'danger' as TaskDueDateTone,
       isOverdue: true,
     };
@@ -35,14 +32,14 @@ export function formatTaskDueDate(dueDate: string | null, now = new Date()) {
 
   if (daysUntilDue === 0) {
     return {
-      text: `${formatUtcDate(date)} · сегодня`,
+      text: `${formatDate(dueDate)} · сегодня`,
       tone: 'warning' as TaskDueDateTone,
       isOverdue: false,
     };
   }
 
   return {
-    text: formatUtcDate(date),
+    text: formatDate(dueDate),
     tone: 'default' as TaskDueDateTone,
     isOverdue: false,
   };
@@ -62,22 +59,4 @@ export function formatLabelSummary(labels: BoardLabel[]) {
   }
 
   return labels.map((label) => label.name).join(', ');
-}
-
-function parseDateOnly(value: string) {
-  const [year, month, day] = value.split('-').map(Number);
-
-  return new Date(Date.UTC(year, month - 1, day));
-}
-
-function getUtcDateOnly(date: Date) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-}
-
-function formatUtcDate(date: Date) {
-  return `${pad(date.getUTCDate())}.${pad(date.getUTCMonth() + 1)}.${date.getUTCFullYear()}`;
-}
-
-function pad(value: number) {
-  return String(value).padStart(2, '0');
 }

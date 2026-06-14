@@ -14,11 +14,12 @@ type BootstrapClient = {
 };
 
 type EnsureAuthWorkspaceOptions = {
-  createWorkspaceId?: () => string;
+  createWorkspaceId?: (userId: string) => string;
 };
 
 const BOOTSTRAP_ERROR_MESSAGE =
   'Не удалось подготовить рабочее пространство. Попробуйте еще раз.';
+const SUPABASE_DUPLICATE_CONSTRAINT_CODE = '23505';
 
 export async function ensureAuthWorkspace(
   supabaseClient: BootstrapClient,
@@ -38,31 +39,52 @@ export async function ensureAuthWorkspace(
       };
     }
 
-    const workspaceId = options.createWorkspaceId?.() ?? crypto.randomUUID();
+    const workspaceId = (options.createWorkspaceId ?? defaultWorkspaceId)(user.id);
+    const existingWorkspace = await getWorkspaceByCreator(supabaseClient, user.id);
+    const workspace =
+      existingWorkspace ??
+      (await createWorkspace(supabaseClient, user.id, workspaceId, email));
 
-    await insertOrThrow(
-      supabaseClient.from('workspaces').insert({
-        id: workspaceId,
-        name: `Команда ${getEmailPrefix(email)}`,
-        created_by: user.id,
-      }),
-    );
-    await insertOrThrow(
-      supabaseClient.from('workspace_members').insert({
-        workspace_id: workspaceId,
-        user_id: user.id,
-        role: 'owner',
-      }),
-    );
+    await upsertWorkspaceMembership(supabaseClient, workspace.id, user.id);
 
     return {
       profile,
-      workspace: await getWorkspace(supabaseClient, workspaceId),
+      workspace,
       role: 'owner',
     };
   } catch (error) {
     throw createBootstrapError(error);
   }
+}
+
+function defaultWorkspaceId(userId: string) {
+  // Deterministic ID avoids creating duplicate workspaces on parallel bootstraps.
+  // For strict DB-level race guarantees, move this logic to an RPC/Edge function
+  // that creates a workspace and owner membership atomically.
+  return userId;
+}
+
+async function createWorkspace(
+  supabaseClient: BootstrapClient,
+  userId: string,
+  workspaceId: string,
+  email: string,
+) {
+  try {
+    await insertOrThrow(
+      supabaseClient.from('workspaces').insert({
+        id: workspaceId,
+        name: `Команда ${getEmailPrefix(email)}`,
+        created_by: userId,
+      }),
+    );
+  } catch (error) {
+    if (!isDuplicateConstraintError(error)) {
+      throw error;
+    }
+  }
+
+  return getWorkspace(supabaseClient, workspaceId);
 }
 
 async function ensureProfile(
@@ -96,13 +118,32 @@ async function ensureProfile(
     avatar_url: null,
   };
 
-  await insertOrThrow(supabaseClient.from('profiles').insert(profileInsert));
+  await insertOrThrow(
+    supabaseClient.from('profiles').upsert(profileInsert, { onConflict: 'id' }),
+  );
 
   return {
     ...profileInsert,
     created_at: '',
     updated_at: '',
   } as Tables<'profiles'>;
+}
+
+async function upsertWorkspaceMembership(
+  supabaseClient: BootstrapClient,
+  workspaceId: string,
+  userId: string,
+) {
+  await insertOrThrow(
+    supabaseClient.from('workspace_members').upsert(
+      {
+        workspace_id: workspaceId,
+        user_id: userId,
+        role: 'owner',
+      },
+      { onConflict: 'workspace_id,user_id' },
+    ),
+  );
 }
 
 async function getExistingMembership(supabaseClient: BootstrapClient, userId: string) {
@@ -133,6 +174,20 @@ async function getWorkspace(supabaseClient: BootstrapClient, workspaceId: string
   }
 
   return data as Tables<'workspaces'>;
+}
+
+async function getWorkspaceByCreator(supabaseClient: BootstrapClient, userId: string) {
+  const { data, error } = await supabaseClient
+    .from('workspaces')
+    .select('*')
+    .eq('created_by', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  throwIfSupabaseError(error);
+
+  return data as Tables<'workspaces'> | null;
 }
 
 async function insertOrThrow(request: PromiseLike<{ error: Error | null }>) {
@@ -170,6 +225,10 @@ function getDisplayName(user: User) {
 
 function normalizeRole(role: string): AuthRole {
   return role === 'owner' ? 'owner' : 'member';
+}
+
+function isDuplicateConstraintError(error: unknown) {
+  return (error as { code?: string } | null)?.code === SUPABASE_DUPLICATE_CONSTRAINT_CODE;
 }
 
 function createBootstrapError(cause: unknown) {

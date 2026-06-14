@@ -1,5 +1,5 @@
-import type { BoardTask, TaskStatus } from './boardTypes';
-import { TASK_STATUSES } from './boardConstants';
+import type { BoardTask } from './boardTypes';
+import { TASK_STATUSES, type TaskStatus } from './boardConstants';
 
 type PreviewMoveInput = {
   tasks: BoardTask[];

@@ -12,7 +12,7 @@ import type { CreateTaskInput, UpdateTaskInput } from './taskTypes';
 
 export const taskQueryKeys = {
   all: ['tasks'] as const,
-  board: (workspaceId: string, projectId: string) =>
+  board: (workspaceId: string | null, projectId: string | null) =>
     [...taskQueryKeys.all, 'board', workspaceId, projectId] as const,
 };
 
@@ -22,8 +22,8 @@ export function useProjectBoardQuery(
 ) {
   return useQuery({
     queryKey: taskQueryKeys.board(
-      workspaceId ?? 'missing-workspace',
-      projectId ?? 'missing-project',
+      workspaceId ?? null,
+      projectId ?? null,
     ),
     enabled: Boolean(workspaceId && projectId),
     queryFn: () => loadProjectBoard(supabase, workspaceId!, projectId!),

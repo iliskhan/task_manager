@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import { type ReactNode } from 'react';
 import { themeTokens } from '../../app/theme/theme';
+import { formatDate, formatDateTime } from '../../shared/date/dateUtils';
 import { PageHeader } from '../../shared/ui/PageHeader';
 import { StatePanel } from '../../shared/ui/StatePanel';
 import { useAuth } from '../auth/useAuth';
@@ -284,20 +285,4 @@ function ActivityList({ items }: { items: StatsActivityItem[] }) {
 
 function EmptyText({ children }: { children: ReactNode }) {
   return <Typography color="text.secondary">{children}</Typography>;
-}
-
-function formatDate(date: string) {
-  const [year, month, day] = date.split('-');
-
-  return `${day}.${month}.${year}`;
-}
-
-function formatDateTime(value: string) {
-  const date = new Date(value);
-
-  return `${pad(date.getUTCDate())}.${pad(date.getUTCMonth() + 1)}.${date.getUTCFullYear()} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
-}
-
-function pad(value: number) {
-  return String(value).padStart(2, '0');
 }

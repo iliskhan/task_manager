@@ -4,6 +4,7 @@ import {
   TASK_STATUSES,
   type TaskStatus,
 } from '../board/boardConstants';
+import { toDateIso } from '../../shared/date/dateUtils';
 import { calculateProjectMetrics } from '../projects/projectMetrics';
 import { getProjectColor } from '../projects/projectFormatters';
 import type {
@@ -190,12 +191,4 @@ function toTaskStatus(status: string): TaskStatus {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function toDateIso(date: Date) {
-  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
-}
-
-function pad(value: number) {
-  return String(value).padStart(2, '0');
 }

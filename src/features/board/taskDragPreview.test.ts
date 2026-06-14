@@ -15,13 +15,34 @@ describe('applyPreviewMove', () => {
       tasks,
       activeTaskId: 'task-1',
       targetStatus: 'done',
-      targetIndex: 1,
+      targetIndex: 0,
     });
 
     expect(next?.map((task) => `${task.status}:${task.id}`)).toEqual([
       'todo:task-2',
       'done:task-1',
       'done:task-3',
+    ]);
+  });
+
+  test('appends a task to another status when the target index is the column length', () => {
+    const tasks = [
+      createBoardTask({ id: 'task-1', status: 'todo', position: 1000 }),
+      createBoardTask({ id: 'task-2', status: 'todo', position: 2000 }),
+      createBoardTask({ id: 'task-3', status: 'done', position: 1000 }),
+    ];
+
+    const next = applyPreviewMove({
+      tasks,
+      activeTaskId: 'task-1',
+      targetStatus: 'done',
+      targetIndex: 1,
+    });
+
+    expect(next?.map((task) => `${task.status}:${task.id}`)).toEqual([
+      'todo:task-2',
+      'done:task-3',
+      'done:task-1',
     ]);
   });
 

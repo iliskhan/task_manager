@@ -25,9 +25,9 @@ type RecordProjectVisitInput = {
 
 export const projectQueryKeys = {
   all: ['projects'] as const,
-  list: (workspaceId: string, userId: string) =>
+  list: (workspaceId: string | null, userId: string | null) =>
     [...projectQueryKeys.all, 'list', workspaceId, userId] as const,
-  detail: (workspaceId: string, projectId: string) =>
+  detail: (workspaceId: string | null, projectId: string | null) =>
     [...projectQueryKeys.all, 'detail', workspaceId, projectId] as const,
 };
 
@@ -36,7 +36,7 @@ export function useProjectListQuery(
   userId: string | null | undefined,
 ) {
   return useQuery({
-    queryKey: projectQueryKeys.list(workspaceId ?? 'missing-workspace', userId ?? 'missing-user'),
+    queryKey: projectQueryKeys.list(workspaceId ?? null, userId ?? null),
     enabled: Boolean(workspaceId && userId),
     queryFn: () => loadProjectList(supabase, workspaceId!, userId!),
   });
@@ -48,8 +48,8 @@ export function useProjectDetailQuery(
 ) {
   return useQuery({
     queryKey: projectQueryKeys.detail(
-      workspaceId ?? 'missing-workspace',
-      projectId ?? 'missing-project',
+      workspaceId ?? null,
+      projectId ?? null,
     ),
     enabled: Boolean(workspaceId && projectId),
     queryFn: () => loadProjectDetail(supabase, workspaceId!, projectId!),

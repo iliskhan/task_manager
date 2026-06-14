@@ -1,4 +1,5 @@
 import { themeTokens } from '../../app/theme/theme';
+import { daysBetween, formatDate, formatTime, isToday } from '../../shared/date/dateUtils';
 import type {
   ProjectDeadlineStatus,
   ProjectIconName,
@@ -7,7 +8,6 @@ import type {
 
 const DEFAULT_PROJECT_COLOR = themeTokens.blue;
 const DEFAULT_PROJECT_ICON: ProjectIconName = 'briefcase';
-const DAY_MS = 24 * 60 * 60 * 1000;
 const PROJECT_ICONS = new Set<ProjectIconName>(['briefcase', 'laptop', 'school', 'heart']);
 
 export function formatDeadlineStatus(
@@ -23,15 +23,11 @@ export function formatDeadlineStatus(
     };
   }
 
-  const deadlineDate = parseDateOnly(deadline);
-  const today = getUtcDateOnly(now);
-  const daysUntilDeadline = Math.round(
-    (deadlineDate.getTime() - today.getTime()) / DAY_MS,
-  );
+  const daysUntilDeadline = daysBetween(deadline, now);
 
   if (daysUntilDeadline < 0) {
     return createDeadlineStatus(
-      deadlineDate,
+      deadline,
       `Просрочено на ${formatDayCount(Math.abs(daysUntilDeadline))}`,
       'danger',
       daysUntilDeadline,
@@ -40,7 +36,7 @@ export function formatDeadlineStatus(
 
   if (daysUntilDeadline === 0) {
     return createDeadlineStatus(
-      deadlineDate,
+      deadline,
       'Сегодня дедлайн',
       'warning',
       daysUntilDeadline,
@@ -48,7 +44,7 @@ export function formatDeadlineStatus(
   }
 
   return createDeadlineStatus(
-    deadlineDate,
+    deadline,
     `Осталось ${formatDayCount(daysUntilDeadline)}`,
     'success',
     daysUntilDeadline,
@@ -60,15 +56,11 @@ export function formatLastVisit(visitedAt: string | null, now = new Date()) {
     return 'Еще не открывали';
   }
 
-  const visitDate = new Date(visitedAt);
-  const today = getUtcDateOnly(now);
-  const visitDay = getUtcDateOnly(visitDate);
-
-  if (today.getTime() === visitDay.getTime()) {
-    return `Сегодня, ${formatUtcTime(visitDate)}`;
+  if (isToday(new Date(visitedAt), now)) {
+    return `Сегодня, ${formatTime(visitedAt)}`;
   }
 
-  return `${formatUtcDate(visitDate)}, ${formatUtcTime(visitDate)}`;
+  return `${formatDate(new Date(visitedAt))}, ${formatTime(visitedAt)}`;
 }
 
 export function getProjectColor(color: string | null) {
@@ -82,35 +74,17 @@ export function getProjectIconName(iconName: string | null): ProjectIconName {
 }
 
 function createDeadlineStatus(
-  deadlineDate: Date,
+  deadline: string,
   statusText: string,
   tone: ProjectDeadlineTone,
   daysUntilDeadline: number,
 ): ProjectDeadlineStatus {
   return {
-    dateText: formatUtcDate(deadlineDate),
+    dateText: formatDate(deadline),
     statusText,
     tone,
     daysUntilDeadline,
   };
-}
-
-function parseDateOnly(value: string) {
-  const [year, month, day] = value.split('-').map(Number);
-
-  return new Date(Date.UTC(year, month - 1, day));
-}
-
-function getUtcDateOnly(date: Date) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-}
-
-function formatUtcDate(date: Date) {
-  return `${pad(date.getUTCDate())}.${pad(date.getUTCMonth() + 1)}.${date.getUTCFullYear()}`;
-}
-
-function formatUtcTime(date: Date) {
-  return `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
 }
 
 function formatDayCount(count: number) {
@@ -130,8 +104,4 @@ function formatDayCount(count: number) {
   }
 
   return `${count} дней`;
-}
-
-function pad(value: number) {
-  return String(value).padStart(2, '0');
 }

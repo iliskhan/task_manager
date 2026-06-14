@@ -379,18 +379,24 @@ function getTaskById(
   return null;
 }
 
-function resolveDropTarget(input: {
+export function resolveDropTarget(input: {
   eventOverId: string | null;
   activeTask: BoardTask | null;
   baseTasksByStatus: Record<TaskStatus, BoardTask[]>;
   lastDragTarget: DragTarget | null;
 }): DragTarget | null {
-  const eventTarget = input.eventOverId
-    ? getTargetDropLocation(input.eventOverId, input.baseTasksByStatus)
-    : null;
+  if (!input.eventOverId) {
+    return null;
+  }
+
+  const eventTarget = getTargetDropLocation(input.eventOverId, input.baseTasksByStatus);
+
+  if (!eventTarget) {
+    return null;
+  }
+
   const shouldUseLastTarget =
     !!input.activeTask &&
-    !!eventTarget &&
     input.activeTask.status === eventTarget.status &&
     !!input.lastDragTarget &&
     input.lastDragTarget.status !== eventTarget.status;
@@ -399,12 +405,8 @@ function resolveDropTarget(input: {
     return input.lastDragTarget;
   }
 
-  if (eventTarget) {
-    return {
-      overId: input.eventOverId,
-      ...eventTarget,
-    };
-  }
-
-  return input.lastDragTarget;
+  return {
+    overId: input.eventOverId,
+    ...eventTarget,
+  };
 }

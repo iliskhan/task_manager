@@ -4,13 +4,13 @@ import { loadCalendarDeadlines } from './calendarRepository';
 
 export const calendarQueryKeys = {
   all: ['calendar'] as const,
-  deadlines: (workspaceId: string) =>
+  deadlines: (workspaceId: string | null) =>
     [...calendarQueryKeys.all, 'deadlines', workspaceId] as const,
 };
 
 export function useCalendarDeadlinesQuery(workspaceId: string | null | undefined) {
   return useQuery({
-    queryKey: calendarQueryKeys.deadlines(workspaceId ?? 'missing-workspace'),
+    queryKey: calendarQueryKeys.deadlines(workspaceId ?? null),
     enabled: Boolean(workspaceId),
     queryFn: () => loadCalendarDeadlines(supabase, workspaceId!),
   });

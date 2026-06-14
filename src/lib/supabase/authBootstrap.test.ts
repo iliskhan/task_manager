@@ -170,6 +170,25 @@ function createQueryBuilder(
 
       return { data: null, error: null };
     },
+    async upsert(value: Row, options?: { onConflict?: string }) {
+      if (errors?.[tableName]) {
+        return { data: null, error: errors[tableName] };
+      }
+
+      const conflictColumns = getConflictColumns(tableName, options);
+      const existingRow = tables[tableName].find((row) =>
+        conflictColumns.every((column) => row[column] === value[column]),
+      );
+
+      if (existingRow) {
+        Object.assign(existingRow, value);
+      } else {
+        tables[tableName].push(value);
+        inserted[tableName].push(value);
+      }
+
+      return { data: null, error: null };
+    },
     async update(value: Row) {
       if (errors?.[tableName]) {
         return { data: null, error: errors[tableName] };
@@ -185,6 +204,21 @@ function createQueryBuilder(
   };
 
   return builder;
+}
+
+function getConflictColumns(
+  tableName: 'profiles' | 'workspace_members' | 'workspaces',
+  options?: { onConflict?: string },
+) {
+  if (options?.onConflict) {
+    return options.onConflict.split(',').map((column) => column.trim());
+  }
+
+  if (tableName === 'workspace_members') {
+    return ['workspace_id', 'user_id'];
+  }
+
+  return ['id'];
 }
 
 function findRows(rows: Row[], filters: Array<{ column: string; value: unknown }>) {

@@ -3,8 +3,10 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { appTheme } from '../../app/theme/theme';
-import type { ProjectBoardData } from './boardTypes';
-import { KanbanBoard } from './KanbanBoard';
+import type { TaskStatus } from './boardConstants';
+import type { BoardTask, ProjectBoardData } from './boardTypes';
+import { KanbanBoard, resolveDropTarget } from './KanbanBoard';
+import { groupTasksByStatus } from './taskGrouping';
 import {
   useCreateTaskMutation,
   useMoveTaskMutation,
@@ -83,6 +85,26 @@ describe('KanbanBoard', () => {
     expect(screen.getByRole('heading', { name: 'Редактировать задачу' })).toBeVisible();
     expect(screen.getByDisplayValue('Подготовить отчет')).toBeVisible();
   });
+  test('does not resolve a stale drag target when drag ends without an over target', () => {
+    const activeTask = createBoardTask({ id: 'task-1', status: 'todo' });
+    const baseTasksByStatus = groupTasksByStatus([
+      activeTask,
+      createBoardTask({ id: 'task-2', status: 'done' }),
+    ]);
+
+    const target = resolveDropTarget({
+      eventOverId: null,
+      activeTask,
+      baseTasksByStatus,
+      lastDragTarget: {
+        overId: 'done',
+        status: 'done',
+        index: 1,
+      },
+    });
+
+    expect(target).toBeNull();
+  });
 });
 
 function renderBoard(options: { initialTaskId?: string } = {}) {
@@ -155,6 +177,27 @@ function createBoardData(overrides: Partial<ProjectBoardData> = {}): ProjectBoar
         assignee: assignees[0],
       },
     ],
+    ...overrides,
+  };
+}
+
+function createBoardTask(overrides: Partial<BoardTask>): BoardTask {
+  return {
+    id: 'task-1',
+    workspaceId: 'workspace-1',
+    projectId: 'project-1',
+    title: 'Task',
+    description: null,
+    status: 'todo' as TaskStatus,
+    priority: 'medium',
+    assigneeId: null,
+    dueDate: null,
+    position: 1000,
+    createdBy: 'user-1',
+    createdAt: '2026-06-07T00:00:00.000Z',
+    updatedAt: '2026-06-07T00:00:00.000Z',
+    labels: [],
+    assignee: null,
     ...overrides,
   };
 }

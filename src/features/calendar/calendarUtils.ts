@@ -1,21 +1,15 @@
+import {
+  addDays,
+  addMonths,
+  formatMonthName,
+  isDateBeforeToday,
+  startOfMonth,
+  startOfWeek,
+  toDateIso,
+} from '../../shared/date/dateUtils';
 import type { CalendarMonth, CalendarTaskDeadline } from './calendarTypes';
 
 const GRID_DAY_COUNT = 42;
-const DAY_MS = 24 * 60 * 60 * 1000;
-const MONTH_NAMES = [
-  'Январь',
-  'Февраль',
-  'Март',
-  'Апрель',
-  'Май',
-  'Июнь',
-  'Июль',
-  'Август',
-  'Сентябрь',
-  'Октябрь',
-  'Ноябрь',
-  'Декабрь',
-];
 
 type BuildCalendarOptions = {
   now?: Date;
@@ -26,8 +20,8 @@ export function buildCalendarMonth(
   tasks: CalendarTaskDeadline[],
   options: BuildCalendarOptions = {},
 ): CalendarMonth {
-  const monthStart = getUtcMonthStart(monthDate);
-  const gridStart = addDays(monthStart, -getMondayOffset(monthStart));
+  const monthStart = startOfMonth(monthDate);
+  const gridStart = startOfWeek(monthStart);
   const todayIso = toDateIso(options.now ?? new Date());
   const tasksByDate = groupCalendarTasksByDate(tasks);
   const days = Array.from({ length: GRID_DAY_COUNT }, (_, index) => {
@@ -36,15 +30,15 @@ export function buildCalendarMonth(
 
     return {
       date: dateIso,
-      dayOfMonth: date.getUTCDate(),
-      isCurrentMonth: date.getUTCMonth() === monthStart.getUTCMonth(),
+      dayOfMonth: date.getDate(),
+      isCurrentMonth: date.getMonth() === monthStart.getMonth(),
       isToday: dateIso === todayIso,
       tasks: tasksByDate.get(dateIso) ?? [],
     };
   });
 
   return {
-    title: `${MONTH_NAMES[monthStart.getUTCMonth()]} ${monthStart.getUTCFullYear()}`,
+    title: `${formatMonthName(monthStart)} ${monthStart.getFullYear()}`,
     monthStart: toDateIso(monthStart),
     days,
   };
@@ -64,19 +58,15 @@ export function groupCalendarTasksByDate(tasks: CalendarTaskDeadline[]) {
 }
 
 export function isCalendarTaskOverdue(task: CalendarTaskDeadline, now = new Date()) {
-  return task.status !== 'done' && task.dueDate < toDateIso(now);
+  return task.status !== 'done' && isDateBeforeToday(task.dueDate, now);
 }
 
 export function shiftCalendarMonth(monthDate: Date, direction: -1 | 1) {
-  return new Date(Date.UTC(
-    monthDate.getUTCFullYear(),
-    monthDate.getUTCMonth() + direction,
-    1,
-  ));
+  return startOfMonth(addMonths(monthDate, direction));
 }
 
 export function getCurrentMonthStart(now = new Date()) {
-  return getUtcMonthStart(now);
+  return startOfMonth(now);
 }
 
 function compareCalendarTasks(first: CalendarTaskDeadline, second: CalendarTaskDeadline) {
@@ -85,24 +75,4 @@ function compareCalendarTasks(first: CalendarTaskDeadline, second: CalendarTaskD
     first.project.name.localeCompare(second.project.name, 'ru') ||
     first.title.localeCompare(second.title, 'ru')
   );
-}
-
-function getUtcMonthStart(date: Date) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
-}
-
-function getMondayOffset(date: Date) {
-  return (date.getUTCDay() + 6) % 7;
-}
-
-function addDays(date: Date, count: number) {
-  return new Date(date.getTime() + count * DAY_MS);
-}
-
-function toDateIso(date: Date) {
-  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
-}
-
-function pad(value: number) {
-  return String(value).padStart(2, '0');
 }

@@ -5,13 +5,13 @@ import type { AddWorkspaceMemberInput } from './teamTypes';
 
 export const teamQueryKeys = {
   all: ['team'] as const,
-  members: (workspaceId: string) =>
+  members: (workspaceId: string | null) =>
     [...teamQueryKeys.all, 'members', workspaceId] as const,
 };
 
 export function useWorkspaceMembersQuery(workspaceId: string | null | undefined) {
   return useQuery({
-    queryKey: teamQueryKeys.members(workspaceId ?? 'missing-workspace'),
+    queryKey: teamQueryKeys.members(workspaceId ?? null),
     enabled: Boolean(workspaceId),
     queryFn: () => loadWorkspaceMembers(supabase, workspaceId!),
   });
