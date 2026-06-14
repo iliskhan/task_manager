@@ -1,28 +1,31 @@
 import Add from '@mui/icons-material/Add';
 import {
   DndContext,
+  DragCancelEvent,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
   KeyboardSensor,
   PointerSensor,
-  closestCorners,
-  type DragEndEvent,
+  closestCenter,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import {
-  sortableKeyboardCoordinates,
-} from '@dnd-kit/sortable';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import {
   DEFAULT_TASK_POSITION,
   TASK_POSITION_STEP,
+  TASK_STATUS_LABELS,
   TASK_STATUSES,
   type TaskStatus,
 } from './boardConstants';
-import type { BoardTask } from './boardTypes';
+import type { BoardTask, BoardColumnView } from './boardTypes';
 import { BoardColumn } from './BoardColumn';
-import { createBoardColumns, groupTasksByStatus } from './taskGrouping';
+import { groupTasksByStatus } from './taskGrouping';
 import { calculateTaskMovePosition } from './taskPositioning';
+import { applyPreviewMove, groupTasksByStatusPreserveOrder } from './taskDragPreview';
 import {
   useCreateTaskMutation,
   useMoveTaskMutation,
@@ -44,6 +47,12 @@ type DrawerState =
   | { mode: 'create'; task: null; defaultStatus: TaskStatus }
   | { mode: 'edit'; task: BoardTask; defaultStatus: TaskStatus };
 
+type DragTarget = {
+  overId: string;
+  status: TaskStatus;
+  index: number;
+};
+
 export function KanbanBoard({
   workspaceId,
   projectId,
@@ -59,6 +68,8 @@ export function KanbanBoard({
   const [drawerState, setDrawerState] = useState<DrawerState | null>(null);
   const [boardError, setBoardError] = useState<string | null>(null);
   const [openedInitialTaskId, setOpenedInitialTaskId] = useState<string | null>(null);
+  const [previewTasks, setPreviewTasks] = useState<BoardTask[] | null>(null);
+  const [lastDragTarget, setLastDragTarget] = useState<DragTarget | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -74,8 +85,22 @@ export function KanbanBoard({
     labels: [],
     assignees: [],
   };
-  const columns = useMemo(() => createBoardColumns(boardData.tasks), [boardData.tasks]);
-  const tasksByStatus = useMemo(() => groupTasksByStatus(boardData.tasks), [boardData.tasks]);
+  const baseTasksByStatus = useMemo(() => groupTasksByStatus(boardData.tasks), [boardData.tasks]);
+  const boardTasks = previewTasks ?? boardData.tasks;
+  const tasksByStatus = useMemo(
+    () =>
+      previewTasks
+        ? groupTasksByStatusPreserveOrder(boardTasks)
+        : groupTasksByStatus(boardTasks),
+    [boardTasks, previewTasks],
+  );
+  const columns = useMemo<BoardColumnView[]>(() => {
+    return TASK_STATUSES.map((status) => ({
+      status,
+      label: TASK_STATUS_LABELS[status],
+      tasks: tasksByStatus[status],
+    }));
+  }, [tasksByStatus]);
 
   useEffect(() => {
     if (!initialTaskId || openedInitialTaskId === initialTaskId || drawerState) {
@@ -125,7 +150,7 @@ export function KanbanBoard({
       return;
     }
 
-    const targetTasks = tasksByStatus[values.status];
+    const targetTasks = baseTasksByStatus[values.status];
     const lastTask = targetTasks[targetTasks.length - 1] ?? null;
     await createTaskMutation.mutateAsync({
       workspaceId,
@@ -143,29 +168,74 @@ export function KanbanBoard({
     setDrawerState(null);
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const activeTaskId = String(event.active.id);
-    const overId = event.over ? String(event.over.id) : null;
+  const resetDragState = () => {
+    setPreviewTasks(null);
+    setLastDragTarget(null);
+  };
 
-    if (!overId || activeTaskId === overId) {
+  const handleDragStart = (_event: DragStartEvent) => {
+    setBoardError(null);
+    resetDragState();
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    if (!event.over) {
       return;
     }
 
+    const activeTaskId = String(event.active.id);
+    const overId = String(event.over.id);
     const target = getTargetDropLocation(overId, tasksByStatus);
 
     if (!target) {
+      resetDragState();
+      return;
+    }
+
+    setLastDragTarget({
+      overId,
+      status: target.status,
+      index: target.index,
+    });
+
+    const next = applyPreviewMove({
+      tasks: boardTasks,
+      activeTaskId,
+      targetStatus: target.status,
+      targetIndex: target.index,
+    });
+
+    if (next) {
+      setPreviewTasks(next);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const dragTaskId = String(event.active.id);
+    const eventOverId = event.over ? String(event.over.id) : null;
+    const activeTask = getTaskById(baseTasksByStatus, dragTaskId);
+    const target = resolveDropTarget({
+      eventOverId,
+      activeTask,
+      baseTasksByStatus,
+      lastDragTarget,
+    });
+
+    if (!target) {
+      resetDragState();
       return;
     }
 
     const move = calculateTaskMovePosition({
-      activeTaskId,
-      overTaskId: overId,
+      activeTaskId: dragTaskId,
+      overTaskId: target.overId,
       targetStatus: target.status,
       targetIndex: target.index,
-      tasksByStatus,
+      tasksByStatus: baseTasksByStatus,
     });
 
     if (!move) {
+      resetDragState();
       return;
     }
 
@@ -180,15 +250,21 @@ export function KanbanBoard({
         position: move.position,
       });
     } catch {
-      setBoardError('Не удалось переместить задачу. Доска возвращена к предыдущему состоянию.');
+      setBoardError('Не удалось переместить задачу. Задача пока в рабочем состоянии и должна вернуться после завершения.');
+    } finally {
+      resetDragState();
     }
+  };
+
+  const handleDragCancel = (_event: DragCancelEvent) => {
+    resetDragState();
   };
 
   if (boardQuery.isLoading) {
     return (
       <Stack spacing={1.5} sx={{ minHeight: 320, alignItems: 'center', justifyContent: 'center' }}>
         <CircularProgress size={28} />
-        <Typography color="text.secondary">Загружаем доску...</Typography>
+        <Typography color="text.secondary">Загрузка доски...</Typography>
       </Stack>
     );
   }
@@ -226,7 +302,14 @@ export function KanbanBoard({
 
       {boardError ? <Alert severity="error">{boardError}</Alert> : null}
 
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
         <Box
           sx={{
             display: 'flex',
@@ -279,4 +362,49 @@ function getTargetDropLocation(
   }
 
   return null;
+}
+
+function getTaskById(
+  tasksByStatus: Record<TaskStatus, BoardTask[]>,
+  taskId: string,
+): BoardTask | null {
+  for (const status of TASK_STATUSES) {
+    const task = tasksByStatus[status].find((candidate) => candidate.id === taskId);
+
+    if (task) {
+      return task;
+    }
+  }
+
+  return null;
+}
+
+function resolveDropTarget(input: {
+  eventOverId: string | null;
+  activeTask: BoardTask | null;
+  baseTasksByStatus: Record<TaskStatus, BoardTask[]>;
+  lastDragTarget: DragTarget | null;
+}): DragTarget | null {
+  const eventTarget = input.eventOverId
+    ? getTargetDropLocation(input.eventOverId, input.baseTasksByStatus)
+    : null;
+  const shouldUseLastTarget =
+    !!input.activeTask &&
+    !!eventTarget &&
+    input.activeTask.status === eventTarget.status &&
+    !!input.lastDragTarget &&
+    input.lastDragTarget.status !== eventTarget.status;
+
+  if (shouldUseLastTarget) {
+    return input.lastDragTarget;
+  }
+
+  if (eventTarget) {
+    return {
+      overId: input.eventOverId,
+      ...eventTarget,
+    };
+  }
+
+  return input.lastDragTarget;
 }
