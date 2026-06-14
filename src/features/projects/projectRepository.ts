@@ -141,6 +141,10 @@ export async function updateProject(
     .single();
   const project = getDataOrThrow<ProjectRow>(projectResponse);
 
+  if (project.archived_at) {
+    throw new Error('Не удалось вернуть проект из архива.');
+  }
+
   await insertActivityEvent(client, {
     workspaceId: input.workspaceId,
     userId: input.userId,

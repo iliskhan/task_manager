@@ -6,8 +6,10 @@ import {
   projectQueryKeys,
   useCreateProjectMutation,
   useProjectListQuery,
+  useRestoreProjectMutation,
 } from './projectQueries';
-import { createProject, loadProjectList } from './projectRepository';
+import { createProject, loadProjectList, restoreProject } from './projectRepository';
+import type { ProjectListItem } from './projectTypes';
 
 vi.mock('../../lib/supabase/client', () => ({
   supabase: { from: vi.fn() },
@@ -19,6 +21,7 @@ vi.mock('./projectRepository', () => ({
   loadProjectDetail: vi.fn(),
   updateProject: vi.fn(),
   archiveProject: vi.fn(),
+  restoreProject: vi.fn(),
   recordProjectVisit: vi.fn(),
 }));
 
@@ -26,6 +29,7 @@ describe('projectQueries', () => {
   beforeEach(() => {
     vi.mocked(loadProjectList).mockReset();
     vi.mocked(createProject).mockReset();
+    vi.mocked(restoreProject).mockReset();
   });
 
   test('loads project list for a workspace and user', async () => {
@@ -67,6 +71,34 @@ describe('projectQueries', () => {
       queryKey: projectQueryKeys.list('workspace-1', 'user-1'),
     });
   });
+
+  test('updates cached project archive state after restoring a project', async () => {
+    vi.mocked(restoreProject).mockResolvedValue({
+      id: 'project-1',
+      archived_at: null,
+    } as never);
+    const { queryClient, wrapper } = createQueryWrapper();
+    queryClient.setQueryData(projectQueryKeys.list('workspace-1', 'user-1'), [
+      createProjectListItem({
+        id: 'project-1',
+        archived_at: '2026-06-12T12:00:00.000Z',
+      }),
+    ]);
+
+    const { result } = renderHook(() => useRestoreProjectMutation(), { wrapper });
+
+    await result.current.mutateAsync({
+      workspaceId: 'workspace-1',
+      userId: 'user-1',
+      projectId: 'project-1',
+    });
+
+    expect(
+      queryClient.getQueryData<ProjectListItem[]>(
+        projectQueryKeys.list('workspace-1', 'user-1'),
+      )?.[0].archived_at,
+    ).toBeNull();
+  });
 });
 
 function createQueryWrapper() {
@@ -86,5 +118,35 @@ function createQueryWrapper() {
     wrapper: ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     ),
+  };
+}
+
+function createProjectListItem(overrides: Partial<ProjectListItem> = {}): ProjectListItem {
+  return {
+    id: 'project-1',
+    workspace_id: 'workspace-1',
+    name: 'Проект',
+    description: null,
+    icon_name: 'briefcase',
+    color: '#42a5ff',
+    deadline: null,
+    archived_at: null,
+    created_by: 'user-1',
+    created_at: '2026-06-07T00:00:00.000Z',
+    updated_at: '2026-06-07T00:00:00.000Z',
+    doneTaskCount: 0,
+    totalTaskCount: 0,
+    progress: 0,
+    lastVisitedAt: null,
+    deadlineStatus: {
+      dateText: 'Без дедлайна',
+      statusText: 'Срок не задан',
+      tone: 'muted',
+      daysUntilDeadline: null,
+    },
+    lastVisitText: 'Еще не открывали',
+    displayColor: '#42a5ff',
+    displayIconName: 'briefcase',
+    ...overrides,
   };
 }

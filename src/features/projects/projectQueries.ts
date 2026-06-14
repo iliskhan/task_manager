@@ -11,6 +11,7 @@ import {
 } from './projectRepository';
 import type {
   ArchiveProjectInput,
+  ProjectListItem,
   ProjectMutationInput,
   RestoreProjectInput,
   UpdateProjectInput,
@@ -104,7 +105,20 @@ export function useRestoreProjectMutation() {
 
   return useMutation({
     mutationFn: (input: RestoreProjectInput) => restoreProject(supabase, input),
-    onSuccess: (_project, input) => {
+    onSuccess: (project, input) => {
+      queryClient.setQueryData<ProjectListItem[]>(
+        projectQueryKeys.list(input.workspaceId, input.userId),
+        (currentProjects) =>
+          currentProjects?.map((currentProject) =>
+            currentProject.id === input.projectId
+              ? {
+                  ...currentProject,
+                  archived_at: project.archived_at,
+                  updated_at: project.updated_at,
+                }
+              : currentProject,
+          ),
+      );
       queryClient.invalidateQueries({
         queryKey: projectQueryKeys.list(input.workspaceId, input.userId),
       });

@@ -13,6 +13,19 @@ type ProjectListControlsProps = {
   onSortKeyChange: (value: ProjectSortKey) => void;
 };
 
+const statusFilterLabels: Record<ProjectStatusFilter, string> = {
+  active: 'Активные',
+  archived: 'Архивные',
+  all: 'Все проекты',
+};
+
+const sortLabels: Record<ProjectSortKey, string> = {
+  deadline: 'По дедлайну',
+  progress: 'По прогрессу',
+  lastVisit: 'По посещению',
+  createdAt: 'По созданию',
+};
+
 export function ProjectListControls({
   search,
   statusFilter,
@@ -52,24 +65,37 @@ export function ProjectListControls({
         value={statusFilter}
         inputProps={{ 'aria-label': 'Фильтр проектов' }}
         startAdornment={<FilterListOutlined sx={{ mr: 1.2 }} />}
+        renderValue={(value) => statusFilterLabels[value as ProjectStatusFilter]}
         onChange={(event) => onStatusFilterChange(event.target.value as ProjectStatusFilter)}
         sx={{ minWidth: { xs: '100%', md: 232 } }}
       >
-        <MenuItem value="active">Активные</MenuItem>
-        <MenuItem value="archived">Архивные</MenuItem>
-        <MenuItem value="all">Все проекты</MenuItem>
+        {Object.entries(statusFilterLabels).map(([value, label]) => (
+          <MenuItem
+            key={value}
+            value={value}
+            sx={{ display: statusFilter === value ? 'none' : undefined }}
+          >
+            {label}
+          </MenuItem>
+        ))}
       </Select>
       <Select
         value={sortKey}
         inputProps={{ 'aria-label': 'Сортировка проектов' }}
         startAdornment={<SortOutlined sx={{ mr: 1.2 }} />}
+        renderValue={(value) => sortLabels[value as ProjectSortKey]}
         onChange={(event) => onSortKeyChange(event.target.value as ProjectSortKey)}
         sx={{ minWidth: { xs: '100%', md: 220 } }}
       >
-        <MenuItem value="deadline">По дедлайну</MenuItem>
-        <MenuItem value="progress">По прогрессу</MenuItem>
-        <MenuItem value="lastVisit">По посещению</MenuItem>
-        <MenuItem value="createdAt">По созданию</MenuItem>
+        {Object.entries(sortLabels).map(([value, label]) => (
+          <MenuItem
+            key={value}
+            value={value}
+            sx={{ display: sortKey === value ? 'none' : undefined }}
+          >
+            {label}
+          </MenuItem>
+        ))}
       </Select>
     </Box>
   );
