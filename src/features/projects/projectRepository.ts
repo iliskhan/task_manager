@@ -6,6 +6,7 @@ import type {
   ProjectListItem,
   ProjectMutationInput,
   ProjectRow,
+  RestoreProjectInput,
   ProjectTaskRow,
   ProjectVisitRow,
   UpdateProjectInput,
@@ -177,6 +178,30 @@ export async function archiveProject(
   return project;
 }
 
+export async function restoreProject(
+  client: ProjectRepositoryClient,
+  input: RestoreProjectInput,
+) {
+  const projectResponse = await client
+    .from('projects')
+    .update({ archived_at: null })
+    .eq('workspace_id', input.workspaceId)
+    .eq('id', input.projectId)
+    .select('*')
+    .single();
+  const project = getDataOrThrow<ProjectRow>(projectResponse);
+
+  await insertActivityEvent(client, {
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    projectId: input.projectId,
+    eventType: 'project_restored',
+    payload: { name: project.name },
+  });
+
+  return project;
+}
+
 export async function recordProjectVisit(
   client: ProjectRepositoryClient,
   projectId: string,
@@ -218,7 +243,11 @@ async function insertActivityEvent(
     workspaceId: string;
     userId: string;
     projectId: string;
-    eventType: 'project_created' | 'project_updated' | 'project_archived';
+    eventType:
+      | 'project_created'
+      | 'project_updated'
+      | 'project_archived'
+      | 'project_restored';
     payload: Record<string, string>;
   },
 ) {

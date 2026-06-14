@@ -13,6 +13,7 @@ import {
   useArchiveProjectMutation,
   useCreateProjectMutation,
   useProjectListQuery,
+  useRestoreProjectMutation,
   useUpdateProjectMutation,
 } from './projectQueries';
 import type { ProjectListItem, ProjectSortKey, ProjectStatusFilter } from './projectTypes';
@@ -28,6 +29,7 @@ export function ProjectsPage() {
   const createProjectMutation = useCreateProjectMutation();
   const updateProjectMutation = useUpdateProjectMutation();
   const archiveProjectMutation = useArchiveProjectMutation();
+  const restoreProjectMutation = useRestoreProjectMutation();
   const projects = projectListQuery.data ?? [];
   const visibleProjects = useMemo(
     () =>
@@ -89,8 +91,23 @@ export function ProjectsPage() {
     });
   };
 
+  const handleRestore = async (project: ProjectListItem) => {
+    if (!workspace?.id || !user?.id) {
+      return;
+    }
+
+    await restoreProjectMutation.mutateAsync({
+      workspaceId: workspace.id,
+      userId: user.id,
+      projectId: project.id,
+    });
+  };
+
   const mutationError =
-    createProjectMutation.error ?? updateProjectMutation.error ?? archiveProjectMutation.error;
+    createProjectMutation.error ??
+    updateProjectMutation.error ??
+    archiveProjectMutation.error ??
+    restoreProjectMutation.error;
   const isDialogSubmitting =
     createProjectMutation.isPending || updateProjectMutation.isPending;
 
@@ -169,7 +186,9 @@ export function ProjectsPage() {
               isOwner={role === 'owner'}
               onEdit={openEditDialog}
               onArchive={handleArchive}
+              onRestore={handleRestore}
               isArchivePending={archiveProjectMutation.isPending}
+              isRestorePending={restoreProjectMutation.isPending}
             />
           ))}
         </Stack>

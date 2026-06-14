@@ -50,3 +50,5 @@ export type ArchiveProjectInput = {
   userId: string;
   projectId: string;
 };
+
+export type RestoreProjectInput = ArchiveProjectInput;

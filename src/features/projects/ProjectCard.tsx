@@ -23,7 +23,9 @@ type ProjectCardProps = {
   isOwner: boolean;
   onEdit: (project: ProjectListItem) => void;
   onArchive: (project: ProjectListItem) => void;
+  onRestore: (project: ProjectListItem) => void;
   isArchivePending?: boolean;
+  isRestorePending?: boolean;
 };
 
 const iconByName: Record<ProjectIconName, ComponentType<SvgIconProps>> = {
@@ -45,7 +47,9 @@ export function ProjectCard({
   isOwner,
   onEdit,
   onArchive,
+  onRestore,
   isArchivePending,
+  isRestorePending,
 }: ProjectCardProps) {
   const Icon = iconByName[project.displayIconName];
 
@@ -156,7 +160,9 @@ export function ProjectCard({
         isOwner={isOwner}
         onEdit={onEdit}
         onArchive={onArchive}
+        onRestore={onRestore}
         isArchivePending={isArchivePending}
+        isRestorePending={isRestorePending}
       />
     </Paper>
   );

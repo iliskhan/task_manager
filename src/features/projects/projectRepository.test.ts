@@ -5,6 +5,7 @@ import {
   loadProjectDetail,
   loadProjectList,
   recordProjectVisit,
+  restoreProject,
   updateProject,
 } from './projectRepository';
 import type { ProjectRow, ProjectTaskRow, ProjectVisitRow } from './projectTypes';
@@ -113,7 +114,7 @@ describe('projectRepository', () => {
     });
   });
 
-  test('updates and archives projects without issuing hard delete calls', async () => {
+  test('updates, archives, and restores projects without issuing hard delete calls', async () => {
     const client = createClient({
       projects: [createProjectRow({ id: 'project-1' })],
     });
@@ -135,6 +136,11 @@ describe('projectRepository', () => {
     }, {
       now: new Date('2026-06-12T12:00:00.000Z'),
     });
+    await restoreProject(client, {
+      projectId: 'project-1',
+      workspaceId: 'workspace-1',
+      userId: 'user-1',
+    });
 
     const updateCalls = client.calls.filter(
       (call) => call.table === 'projects' && call.method === 'update',
@@ -150,12 +156,15 @@ describe('projectRepository', () => {
     expect(updateCalls[1].args[0]).toEqual({
       archived_at: '2026-06-12T12:00:00.000Z',
     });
+    expect(updateCalls[2].args[0]).toEqual({
+      archived_at: null,
+    });
     expect(client.calls.some((call) => call.method === 'delete')).toBe(false);
     expect(
       client.calls
         .filter((call) => call.table === 'activity_events' && call.method === 'insert')
         .map((call) => (call.args[0] as { event_type: string }).event_type),
-    ).toEqual(['project_updated', 'project_archived']);
+    ).toEqual(['project_updated', 'project_archived', 'project_restored']);
   });
 
   test('upserts project visits for the current user', async () => {

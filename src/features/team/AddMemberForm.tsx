@@ -40,7 +40,8 @@ export function AddMemberForm({
     <Stack spacing={1.5}>
       {error ? <Alert severity="error">{error.message}</Alert> : null}
       <TextField
-        label="Email участника"
+        placeholder="Email участника"
+        slotProps={{ htmlInput: { 'aria-label': 'Email участника' } }}
         value={email}
         error={Boolean(fieldError)}
         helperText={fieldError ?? ' '}

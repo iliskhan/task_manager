@@ -6,11 +6,13 @@ import {
   loadProjectDetail,
   loadProjectList,
   recordProjectVisit,
+  restoreProject,
   updateProject,
 } from './projectRepository';
 import type {
   ArchiveProjectInput,
   ProjectMutationInput,
+  RestoreProjectInput,
   UpdateProjectInput,
 } from './projectTypes';
 
@@ -86,6 +88,22 @@ export function useArchiveProjectMutation() {
 
   return useMutation({
     mutationFn: (input: ArchiveProjectInput) => archiveProject(supabase, input),
+    onSuccess: (_project, input) => {
+      queryClient.invalidateQueries({
+        queryKey: projectQueryKeys.list(input.workspaceId, input.userId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectQueryKeys.detail(input.workspaceId, input.projectId),
+      });
+    },
+  });
+}
+
+export function useRestoreProjectMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: RestoreProjectInput) => restoreProject(supabase, input),
     onSuccess: (_project, input) => {
       queryClient.invalidateQueries({
         queryKey: projectQueryKeys.list(input.workspaceId, input.userId),

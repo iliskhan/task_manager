@@ -11,6 +11,7 @@ import {
   useArchiveProjectMutation,
   useCreateProjectMutation,
   useProjectListQuery,
+  useRestoreProjectMutation,
   useUpdateProjectMutation,
 } from './projectQueries';
 import type { ProjectListItem } from './projectTypes';
@@ -24,17 +25,20 @@ vi.mock('./projectQueries', () => ({
   useCreateProjectMutation: vi.fn(),
   useUpdateProjectMutation: vi.fn(),
   useArchiveProjectMutation: vi.fn(),
+  useRestoreProjectMutation: vi.fn(),
 }));
 
 const createProjectMutateAsync = vi.fn();
 const updateProjectMutateAsync = vi.fn();
 const archiveProjectMutateAsync = vi.fn();
+const restoreProjectMutateAsync = vi.fn();
 
 describe('ProjectsPage', () => {
   beforeEach(() => {
     createProjectMutateAsync.mockReset();
     updateProjectMutateAsync.mockReset();
     archiveProjectMutateAsync.mockReset();
+    restoreProjectMutateAsync.mockReset();
     vi.mocked(useAuth).mockReturnValue(createAuthValue({ role: 'owner' }));
     vi.mocked(useCreateProjectMutation).mockReturnValue(
       createMutationResult(createProjectMutateAsync),
@@ -44,6 +48,9 @@ describe('ProjectsPage', () => {
     );
     vi.mocked(useArchiveProjectMutation).mockReturnValue(
       createMutationResult(archiveProjectMutateAsync),
+    );
+    vi.mocked(useRestoreProjectMutation).mockReturnValue(
+      createMutationResult(restoreProjectMutateAsync),
     );
   });
 
@@ -148,6 +155,32 @@ describe('ProjectsPage', () => {
         name: 'Действия проекта Бизнес',
       }),
     ).not.toBeInTheDocument();
+  });
+
+  test('restores archived projects from the actions menu', async () => {
+    const user = userEvent.setup();
+    mockProjectList([
+      createProject({
+        id: 'archive',
+        name: 'Архивный проект',
+        archived_at: '2026-06-11T00:00:00.000Z',
+      }),
+    ]);
+
+    renderProjectsPage();
+
+    await user.click(screen.getByRole('combobox', { name: 'Фильтр проектов' }));
+    await user.click(screen.getByRole('option', { name: 'Архивные' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Действия проекта Архивный проект' }),
+    );
+    await user.click(screen.getByRole('menuitem', { name: 'Вернуть из архива' }));
+
+    expect(restoreProjectMutateAsync).toHaveBeenCalledWith({
+      workspaceId: 'workspace-1',
+      userId: 'user-1',
+      projectId: 'archive',
+    });
   });
 });
 
